@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import stringSimilarity from 'string-similarity';
 import Popup from './Popup';
 import './Common.css';
-import './WebinarDashboard.css';
+import '../WebinarDashboard.css';
 
 export default function TopicApprovalForm() {
   const navigate = useNavigate();
@@ -186,7 +186,7 @@ export default function TopicApprovalForm() {
       </div>
 
       <div className="form-wrapper">
-        <div className="form-container">
+        <div >
           <button className="back-btn" onClick={() => navigate("/")}>
             <ArrowLeft className="back-btn-icon" /> Back to Dashboard
           </button>
@@ -195,7 +195,7 @@ export default function TopicApprovalForm() {
             <div className="icon-wrapper">
               <CheckCircle className="header-icon" />
             </div>
-            <h1 className="form-title">Requested Topic Approval</h1>
+            <h1 className="form-title topic-approval-header">Requested Topic Approval</h1>
           </div>
 
           {/* Phase Dropdown */}
@@ -204,6 +204,7 @@ export default function TopicApprovalForm() {
               <select
                 value={selectedPhase}
                 onChange={(e) => handlePhaseChange(e.target.value)}
+                className="phase-dropdown"
                 style={{
                   appearance: 'none',
                   backgroundColor: 'white',
@@ -237,24 +238,14 @@ export default function TopicApprovalForm() {
             </div>
           </div>
 
-          {/* Table Header */}
-          <div className="hidden md:grid md:grid-cols-6 gap-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold p-4 md:p-10 text-center">
-            <div>DOMAIN</div>
-            <div>TOPIC</div>
-            <div>TOTAL REQUESTED</div>
-            <div>STATUS</div>
-            <div>ACTION</div>
-            <div>DETAILS</div>
-          </div>
-
-          {/* Mobile Header */}
+          {/* Mobile Header
           <div className="md:hidden bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold p-4 text-center">
             <h3 className="text-lg">Topic Approval Requests</h3>
-          </div>
+          </div> */}
 
           {/* Table */}
           <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 topic-approval-table">
               <thead className="bg-gradient-to-r from-purple-600 to-blue-500">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">DOMAIN</th>
@@ -354,10 +345,9 @@ export default function TopicApprovalForm() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-gray-500">
           Designed with 💜 for Alumni Network
+        </div>
         </div>
       </div>
 

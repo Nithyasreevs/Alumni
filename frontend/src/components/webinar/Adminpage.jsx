@@ -521,7 +521,7 @@ const Adminpage = () => {
             </div>
             <div style={{ overflowX: 'auto', width: '100%', marginTop: '1rem' }}>
               <div style={{ width: "100%", overflowX: "auto" }}>
-  <table style={{ width: "1600px", borderCollapse: "collapse" }}>
+  <table style={{ width: "1200px", borderCollapse: "collapse" }}>
     <thead>
       <tr style={{ backgroundColor: "#eee", paddingTop: "15px", paddingBottom: "15px" }}>
         <th style={{  width: "177px",padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Phase ID</th>
@@ -727,7 +727,7 @@ const Adminpage = () => {
         <div className="orb orb-pink"></div>
       </div>
       <div className="form-wrapper">
-        <div className="form-container">
+        <div>
           <div className="form-header">
             <h1 className="form-title">Admin Dashboard</h1>
             {/* Current Phase Display */}

@@ -689,11 +689,6 @@
     gap: 1rem;
   }
 
-  .webinar-poster-container {
-    width: 230px;
-    height: 352px;
-  }
-
   .webinar-content-section {
     width: 100%;
   }
@@ -798,9 +793,7 @@
     font-size: 0.8rem;
   }
 
-  .webinar-poster-container {
-    height: 200px;
-  }
+
 
   .webinar-generate-btn {
     padding: 0.7rem;

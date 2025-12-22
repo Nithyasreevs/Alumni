@@ -1,7 +1,7 @@
 import React from "react";
-import necLogo from "../assets/NEC-college Logo.png";
-import posterFooter from "../assets/poster-footer.jpg";
-import founderLogo from "../assets/rigth - Founder-Logo.png";
+import necLogo from "../../assets/NEC-college Logo.png";
+import posterFooter from "../../assets/poster-footer.jpg";
+import founderLogo from "../../assets/rigth - Founder-Logo.png";
 import "./WebinarPoster.css";
 
 export default function WebinarPoster({

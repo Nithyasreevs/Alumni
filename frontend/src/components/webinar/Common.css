@@ -72,6 +72,26 @@
   border: 1px solid #e0cfff;
   padding: 1.25rem;
 }
+.webinar-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border: 1px solid #e0cfff;
+  padding: 1rem;
+  position: relative;
+  width: 430px;
+}
+.webinar1-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  border-radius: 2rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border: 1px solid #e0cfff;
+  padding: 1rem;
+  position: relative;
+  width: 630px;
+}
 .form-fields { display: flex; flex-direction: column; gap: 1.5rem; }
 .form-group label {
   display: flex;
@@ -80,6 +100,7 @@
   font-weight: 600;
   color: #4b3f91;
   margin-bottom: 0.5rem;
+  flex-wrap: nowrap;
 }
 .field-icon { color: #7c3aed; width: 1.25rem; height: 1.25rem; }
 .required { color: #f44336; }
@@ -564,15 +585,16 @@
     gap: 1rem;
   }
 
-  /* Poster Container Mobile - Same dimensions as desktop */
+  /* Poster Container Mobile - Full width on small screens with maintained aspect ratio */
   .webinar-grid .form-card .flex-shrink-0 {
-    width: 230px !important;
-    height: 352px !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 230 / 352 !important;
   }
 
   .webinar-grid .form-card .flex-shrink-0 .bg-gray-100 {
-    width: 230px !important;
-    height: 352px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   /* Content Area Mobile */
@@ -641,24 +663,29 @@
     margin-top: 0.5rem;
   }
 
-  /* Eye Icon Button Mobile - Decrease width and ensure right end */
+  /* Eye Icon Button Mobile - Reduce width and place in top right */
   .webinar-grid .form-card button.absolute {
-    width: 25px !important;
-    height: 25px !important;
-    padding: 4px !important;
-    right: 10px !important;
+    width: 14px !important;
+    height: 14px !important;
+    padding: 0px !important;
+    right: 8px !important;
     top: 8px !important;
   }
 
   .webinar-grid .form-card button.absolute svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 8px !important;
+    height: 8px !important;
   }
 
   /* Circular Container Mobile */
   .circular-container {
     width: 100% !important;
     padding: 10px !important;
+  }
+
+  /* Webinar Events Grid - Single card per row on mobile */
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -704,5 +731,116 @@
   .generate-btn {
     padding: 0.7rem !important;
     font-size: 0.8rem !important;
+  }
+}
+
+/* ========== TOPIC APPROVAL FORM MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+  /* Topic Approval Table Mobile */
+  .topic-approval-table {
+    font-size: 12px !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  .topic-approval-table th,
+  .topic-approval-table td {
+    padding: 6px 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px !important;
+  }
+
+  .topic-approval-table th {
+    font-size: 11px !important;
+  }
+
+  .topic-approval-table td {
+    font-size: 10px !important;
+  }
+
+  /* Make topic approval table horizontally scrollable on mobile */
+  .topic-approval-table {
+    overflow-x: auto !important;
+    min-width: 600px !important;
+  }
+
+  /* Topic Approval Form Header Mobile */
+  .topic-approval-header {
+    font-size: 1.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Phase Dropdown Mobile */
+  .phase-dropdown {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Approve Button Mobile */
+  .approve-btn {
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* View Students Button Mobile */
+  .view-students-btn {
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens for topic approval */
+  .topic-approval-table {
+    font-size: 10px !important;
+  }
+
+  .topic-approval-table th,
+  .topic-approval-table td {
+    padding: 4px 2px !important;
+    max-width: 60px !important;
+  }
+
+  .topic-approval-table th {
+    font-size: 9px !important;
+  }
+
+  .topic-approval-table td {
+    font-size: 8px !important;
+  }
+
+  .topic-approval-header {
+    font-size: 1.2rem !important;
+  }
+
+  .approve-btn,
+  .view-students-btn {
+    padding: 0.4rem !important;
+    font-size: 0.7rem !important;
+  }
+}
+.view-details-button {
+  position: absolute;
+  top: 0.75rem;          /* top-3 */
+  left : 36rem;           /*left-140 (140 × 0.25rem)*/
+  background-color: #7c3aed; /* bg-purple-600 */
+  color: #ffffff;        /* text-white */
+  padding: 0.25rem;      /* Reduced padding for smaller button */
+  border-radius: 0.5rem; /* rounded-lg */
+  width: 2rem;           /* Decreased width for shorter button */
+  z-index: 10;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.view-details-button:hover {
+  background-color: #6d28d9; /* bg-purple-700 */
+}
+
+@media (max-width: 768px) {
+  .view-details-button {
+    top: 1rem;
+    /* right: 1rem; */
   }
 }

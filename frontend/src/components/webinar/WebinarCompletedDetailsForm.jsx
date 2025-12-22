@@ -207,7 +207,7 @@ const WebinarCompletedDetailsForm = () => {
       </div>
 
       <div className="form-wrapper">
-        <div className="form-container">
+        <div>
           {/* <div className="form-header">
             <h2 className="webinar-subtitle">
               Document of the Completed Webinar are needed to be filled out

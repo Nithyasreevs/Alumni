@@ -204,7 +204,7 @@ export default function StudentRequestForm() {
       </div>
 
       <div className="form-wrapper">
-        <div className="form-container">
+        <div >
 
           <button className="back-btn" onClick={() => navigate("/")}>
             <ArrowLeft className="back-btn-icon" /> Back to Dashboard

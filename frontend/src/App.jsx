@@ -1,21 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from './components/Home';
+import Home from './components/webinar/Home';
 import PlacementDashboard from './components/PlacementDashboard';
 import WebinarDashboard from "./components/WebinarDashboard";
 
-import WebinarAlumniFeedbackForm from "./components/WebinarAlumniFeedbackForm";
-import WebinarCompletedDetailsForm from "./components/WebinarCompletedDetailsForm";
-import StudentRequestForm from "./components/StudentRequestForm";
-import WebinarSpeakerAssignmentForm from "./components/WebinarSpeakerAssignmentForm";
-import WebinarStudentFeedbackForm from "./components/WebinarStudentFeedbackForm";
-import TopicApprovalForm from './components/TopicApprovalForm';
-import WebinarCircular from './components/WebinarCircular';
-import WebinarCertificate from './components/WebinarCertificate';
-import WebinarEvents from './components/WebinarEvents';
-import Adminpage from './components/Adminpage';
-import WebinarDetails from './components/WebinarDetails';
-import OverallWebinarReport from './components/OverallWebinarReport';
-import LoginPage from "./components/LoginPage";
+import WebinarAlumniFeedbackForm from "./components/webinar/WebinarAlumniFeedbackForm";
+import WebinarCompletedDetailsForm from "./components/webinar/WebinarCompletedDetailsForm";
+import StudentRequestForm from "./components/webinar/StudentRequestForm";
+import WebinarSpeakerAssignmentForm from "./components/webinar/WebinarSpeakerAssignmentForm";
+import WebinarStudentFeedbackForm from "./components/webinar/WebinarStudentFeedbackForm";
+import TopicApprovalForm from './components/webinar/TopicApprovalForm';
+import WebinarCircular from './components/webinar/WebinarCircular';
+import WebinarCertificate from './components/webinar/WebinarCertificate';
+import WebinarEvents from './components/webinar/WebinarEvents';
+import Adminpage from './components/webinar/Adminpage';
+import WebinarDetails from './components/webinar/WebinarDetails';
+import OverallWebinarReport from './components/webinar/OverallWebinarReport';
+import LoginPage from "./components/webinar/LoginPage";
 
 import MenteeRegistration from './components/mentorship/MenteeRegistration';
 import MentorRegistration from './components/mentorship/MentorRegistration';

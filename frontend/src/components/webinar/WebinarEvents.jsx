@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Common.css';
 import { FiBookOpen, FiAward, FiEye, FiUpload } from "react-icons/fi";
@@ -12,7 +12,39 @@ import { saveAs } from 'file-saver';
 
 export default function WebinarEvents() {
   const navigate = useNavigate();
+  const posterContainerRef = useRef(null);
+  const [posterScale, setPosterScale] = useState({ scaleX: 0.253, scaleY: 0.29 });
   const [selectedWebinar, setSelectedWebinar] = useState(null);
+
+  // Calculate poster scale based on container width
+  useEffect(() => {
+    const updateScale = () => {
+      if (posterContainerRef.current) {
+        const containerWidth = posterContainerRef.current.offsetWidth;
+        const containerHeight = posterContainerRef.current.offsetHeight;
+        const posterWidth = 900; // Original poster width
+        const posterHeight = 1200; // Original poster height
+
+        const scaleX = containerWidth / posterWidth;
+        const scaleY = (containerHeight / posterHeight) * 1.5;
+
+        setPosterScale({ scaleX, scaleY });
+      }
+    };
+
+    updateScale();
+
+    const resizeObserver = new ResizeObserver(updateScale);
+    if (posterContainerRef.current) {
+      resizeObserver.observe(posterContainerRef.current);
+    }
+
+    return () => {
+      if (posterContainerRef.current) {
+        resizeObserver.unobserve(posterContainerRef.current);
+      }
+    };
+  }, []);
   const [popup, setPopup] = useState({ show: false, message: '', type: 'success' });
   const [webinars, setWebinars] = useState({});
   const [loading, setLoading] = useState(true);
@@ -573,7 +605,7 @@ function signatureCell(title) {
             designation: webinar.speaker?.designation || 'TBD',
             passoutYear: webinar.speaker?.batch || 'TBD',
             department: webinar.speaker?.department || 'TBD',
-            photo: webinar.speaker?.speakerPhoto ? `/uploads/${webinar.speaker.speakerPhoto}` : null,
+          photo: webinar.speaker?.speakerPhoto ? `http://localhost:5000/uploads/${webinar.speaker.speakerPhoto}` : null,
             companyName: webinar.speaker?.companyName || 'TBD',
             email: webinar.speaker?.email || null
           },
@@ -712,7 +744,7 @@ function signatureCell(title) {
   // };
   // /** ------------------ Webinar Card ------------------ */
 /** ------------------ Webinar Card ------------------ */
-  const WebinarCard = ({ webinar }) => {
+  const WebinarCard = ({ webinar, posterScale, posterContainerRef }) => {
     const isRegistered = registeredWebinars.has(webinar._id);
     const isDeadlinePassed = webinar.deadline && new Date() > new Date(webinar.deadline);
     const isWithinOneWeek = webinar.deadline && (new Date(webinar.deadline) - new Date()) <= (7 * 24 * 60 * 60 * 1000) && (new Date(webinar.deadline) - new Date()) > 0;
@@ -724,12 +756,12 @@ function signatureCell(title) {
     console.log('Rendering WebinarCard for webinar:', webinar.title, 'userEmail:', userEmail, 'isCoordinator:', isCoordinator, 'isAdmin:', isAdmin, 'canUpload:', canUpload);
 
     return (
-      <div className="form-card relative p-4 w-[630px]">
+      <div className="webinar1-card">
         {/* Upload Button - Only visible to coordinators and admins */}
         {canUpload && (
                   <button
           onClick={() => navigate(`/webinar-details/${webinar._id}/${encodeURIComponent(userEmail)}`, { state: { webinar } })}
-          className="absolute top-3 right-3 bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition-colors z-10"
+          className="view-details-button"
           title="View Webinar Details"
         >
           <FiEye size={20} />
@@ -737,12 +769,12 @@ function signatureCell(title) {
         )}
 
         {/* Card Content - Horizontal Layout */}
-        <div className="flex gap-4">
+        <div style={{ display: 'flex', gap: '16px' }}>
           {/* Left Side - Poster */}
-          <div className="flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden" style={{ width: '230px', height: '352px' }}>
+          <div style={{ flexShrink: 0, backgroundColor: '#f3f4f6', borderRadius: '8px', overflow: 'hidden', width: '230px', height: '352px' }}>
             <div
               style={{
-                transform: 'scaleX(0.253) scaleY(0.29)',
+                transform: `scaleX(${posterScale.scaleX}) scaleY(${posterScale.scaleY})`,
                 transformOrigin: 'top left'
               }}
             >
@@ -862,20 +894,18 @@ function signatureCell(title) {
               {isCertificateEnabled ? 'Certificate' : 'Certificate Not Available'}
             </button> */}
           </div>
-
-            
-            <div className="mt-1">
-              <button
-                onClick={() => handleCertificateDownload(webinar)}
-                className={`submit-btn text-sm py-2 px-4 w-full ${
-                  !isCertificateEnabled ? 'opacity-50 cursor-not-allowed bg-gray-400' : ''
-                }`}
-                disabled={!isCertificateEnabled}
-              >
-                {isCertificateEnabled ? 'Certificate' : 'Certificate Not Available'}
-              </button>
-            </div>
           </div>
+        </div>
+        <div className="mt-1">
+          <button
+            onClick={() => handleCertificateDownload(webinar)}
+            className={`submit-btn text-sm py-2 px-4 w-full ${
+              !isCertificateEnabled ? 'opacity-50 cursor-not-allowed bg-gray-400' : ''
+            }`}
+            disabled={!isCertificateEnabled}
+          >
+            {isCertificateEnabled ? 'Certificate' : 'Certificate Not Available'}
+          </button>
         </div>
       </div>
     );
@@ -1011,7 +1041,7 @@ return (
 
       {/* Main Container */}
       <div className="form-wrapper">
-        <div className="form-container">
+        <div>
             <button className="back-btn" onClick={() => navigate("/")}>
               <ArrowLeft className="back-btn-icon" /> Back to Dashboard
             </button>
@@ -1056,7 +1086,7 @@ return (
                   </div>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-12 mb-12">
                     {monthWebinars.map((wb, i) => (
-                      <WebinarCard key={wb._id || i} webinar={wb} />
+                      <WebinarCard key={wb._id || i} webinar={wb} posterScale={posterScale} posterContainerRef={i === 0 ? posterContainerRef : null} />
                     ))}
                   </div>
                 </div>

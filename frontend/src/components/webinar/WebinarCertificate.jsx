@@ -2,11 +2,11 @@ import React, { useRef, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import "./WebinarCertificate.css";
-import alumniPresidentSignature from "../assets/Alumni-President-removebg-preview.png";
-import principalSignature from "../assets/principal-removebg-preview.png";
-import necLogo from "../assets/Nec-Logo-college.png";
-import necalumni from "../assets/Nec-alumni-association-removebg-preview.png";
-import webinarBackground from "../assets/webinarcertificategreen.jpg";
+import alumniPresidentSignature from "../../assets/Alumni-President-removebg-preview.png";
+import principalSignature from "../../assets/principal-removebg-preview.png";
+import necLogo from "../../assets/Nec-Logo-college.png";
+import necalumni from "../../assets/Nec-alumni-association-removebg-preview.png";
+import webinarBackground from "../../assets/webinarcertificategreen.jpg";
 
 const WebinarCertificate = ({ name = "John Doe", programTitle = "Introduction to React", date = "2023-10-01", autoDownload = false }) => {
   const certRef = useRef();

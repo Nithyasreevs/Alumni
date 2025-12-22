@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import './WebinarDashboard.css';
 // import './Adminpage';
-import './Common.css';
+import './webinar/Common.css';
 import { GraduationCap, ArrowLeft} from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, AlignmentType } from 'docx';
@@ -12,13 +12,13 @@ import { saveAs } from 'file-saver';
 // API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 import MentorshipDashboard from './MentorshipDashboard';
-import WebinarAlumniFeedbackForm from "./WebinarAlumniFeedbackForm";
-import WebinarCompletedDetailsForm from "./WebinarCompletedDetailsForm";
-import StudentRequestForm from "./StudentRequestForm";
-import WebinarSpeakerAssignmentForm from "./WebinarSpeakerAssignmentForm";
-import WebinarStudentFeedbackForm from "./WebinarStudentFeedbackForm";
-import TopicApprovalForm from './TopicApprovalForm';
-import WebinarCircular from './WebinarCircular';
+import WebinarAlumniFeedbackForm from "./webinar/WebinarAlumniFeedbackForm";
+import WebinarCompletedDetailsForm from "./webinar/WebinarCompletedDetailsForm";
+import StudentRequestForm from "./webinar/StudentRequestForm";
+import WebinarSpeakerAssignmentForm from "./webinar/WebinarSpeakerAssignmentForm";
+import WebinarStudentFeedbackForm from "./webinar/WebinarStudentFeedbackForm";
+import TopicApprovalForm from './webinar/TopicApprovalForm';
+import WebinarCircular from './webinar/WebinarCircular';
 
 
 /*WebinarDashboard.jsx
