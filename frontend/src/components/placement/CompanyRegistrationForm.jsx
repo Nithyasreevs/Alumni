@@ -1,10 +1,367 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, XCircle } from 'lucide-react';
-import './CompanyRegistrationForm.css';
 
-// API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    padding: '20px 15px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  },
+  wrapper: {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '20px',
+    padding: '25px 20px',
+    border: '1px solid rgba(139, 92, 246, 0.15)',
+    boxShadow: '0 20px 60px rgba(139, 92, 246, 0.25)',
+    '@media (min-width: 768px)': {
+      borderRadius: '24px',
+      padding: '40px'
+    }
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '25px'
+  },
+  icon: {
+    width: '60px',
+    height: '60px',
+    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 15px',
+    fontSize: '28px',
+    boxShadow: '0 10px 28px rgba(139, 92, 246, 0.32)',
+    '@media (min-width: 768px)': {
+      width: '70px',
+      height: '70px',
+      borderRadius: '15px',
+      fontSize: '35px'
+    }
+  },
+  title: {
+    fontSize: '22px',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    marginBottom: '6px',
+    lineHeight: '1.3',
+    '@media (min-width: 768px)': {
+      fontSize: '28px'
+    }
+  },
+  subtitle: {
+    color: '#6b7280',
+    fontSize: '13px',
+    lineHeight: '1.4',
+    '@media (min-width: 768px)': {
+      fontSize: '14px'
+    }
+  },
+  alert: {
+    padding: '12px 16px',
+    marginBottom: '20px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  successAlert: {
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    border: '1px solid #a7f3d0'
+  },
+  errorAlert: {
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
+    border: '1px solid #fecaca'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '15px',
+    marginBottom: '18px',
+    '@media (min-width: 768px)': {
+      gridTemplateColumns: '1fr 1fr'
+    }
+  },
+  group: {
+    marginBottom: '18px'
+  },
+  label: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '6px'
+  },
+  labelIcon: {
+    color: '#8b5cf6'
+  },
+  asterisk: {
+    color: '#ef4444'
+  },
+  input: {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+    '&:focus': {
+      borderColor: '#8b5cf6'
+    },
+    '&:disabled': {
+      backgroundColor: '#f9fafb',
+      cursor: 'not-allowed',
+      opacity: '0.7'
+    }
+  },
+  textarea: {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+    resize: 'vertical',
+    fontFamily: 'inherit',
+    minHeight: '100px',
+    '&:focus': {
+      borderColor: '#8b5cf6'
+    },
+    '&:disabled': {
+      backgroundColor: '#f9fafb',
+      cursor: 'not-allowed',
+      opacity: '0.7'
+    }
+  },
+  fileInput: {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontSize: '14px',
+    cursor: 'pointer',
+    boxSizing: 'border-box',
+    '&:disabled': {
+      backgroundColor: '#f9fafb',
+      cursor: 'not-allowed',
+      opacity: '0.7'
+    }
+  },
+  hint: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '6px',
+    marginLeft: '4px',
+    '@media (min-width: 768px)': {
+      fontSize: '12px'
+    }
+  },
+  fileHint: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '6px',
+    marginLeft: '4px',
+    '@media (min-width: 768px)': {
+      fontSize: '12px'
+    }
+  },
+  submitButton: {
+    width: '100%',
+    padding: '14px',
+    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    '&:hover:not(:disabled)': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 10px 25px rgba(139, 92, 246, 0.4)'
+    },
+    '&:disabled': {
+      background: '#9ca3af',
+      cursor: 'not-allowed',
+      opacity: '0.7'
+    }
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '20px',
+    fontSize: '11px',
+    color: '#9ca3af',
+    '@media (min-width: 768px)': {
+      fontSize: '12px',
+      marginTop: '25px'
+    }
+  },
+  radioGroup: {
+    display: 'flex',
+    gap: '20px',
+    marginTop: '8px'
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    cursor: 'pointer'
+  },
+  radioInput: {
+    margin: '0'
+  },
+  skillsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginBottom: '10px',
+    padding: '10px',
+    background: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    minHeight: '50px',
+    transition: 'all 0.3s ease',
+    '&:focus-within': {
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+    }
+  },
+  skillTag: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    padding: '6px 12px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    color: 'white',
+    borderRadius: '20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    animation: 'slideIn 0.2s ease',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+  },
+  skillTagRemove: {
+    background: 'none',
+    border: 'none',
+    color: 'white',
+    cursor: 'pointer',
+    padding: '2px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: '0.8',
+    transition: 'opacity 0.2s, transform 0.2s',
+    borderRadius: '50%',
+    '&:hover': {
+      opacity: '1',
+      transform: 'scale(1.1)',
+      background: 'rgba(255, 255, 255, 0.2)'
+    },
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed'
+    }
+  },
+  skillInputWrapper: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '5px'
+  },
+  skillInput: {
+    flex: '1',
+    transition: 'all 0.3s ease',
+    '&:focus': {
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+    }
+  },
+  addSkillButton: {
+    padding: '10px 16px',
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.2s, transform 0.2s',
+    fontWeight: '500',
+    minWidth: '44px',
+    '&:hover:not(:disabled)': {
+      background: '#059669',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+    },
+    '&:active:not(:disabled)': {
+      transform: 'translateY(0)'
+    },
+    '&:disabled': {
+      background: '#9ca3af',
+      cursor: 'not-allowed',
+      opacity: '0.6'
+    }
+  },
+  inputError: {
+    borderColor: '#dc2626 !important',
+    boxShadow: '0 0 0 1px #dc2626 !important',
+    '&:focus': {
+      borderColor: '#dc2626 !important',
+      boxShadow: '0 0 0 2px rgba(220, 38, 38, 0.2) !important'
+    }
+  },
+  errorMessage: {
+    color: '#dc2626',
+    fontSize: '0.875rem',
+    marginTop: '0.25rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem'
+  },
+  buttonDisabled: {
+    opacity: '0.6',
+    cursor: 'not-allowed !important'
+  }
+};
+
+// Define keyframes for animation
+const keyframes = `
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-5px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+`;
+
+// Create a style element and append to head
+if (typeof document !== 'undefined') {
+  const styleEl = document.createElement('style');
+  styleEl.innerHTML = keyframes;
+  document.head.appendChild(styleEl);
+}
 
 const CompanyRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -185,7 +542,7 @@ const CompanyRegistrationForm = () => {
       console.log('Sending form data:', Object.fromEntries(formDataToSend));
 
       const response = await axios.post(
-        `${API_BASE_URL}/api/company/register`,
+        'http://localhost:5000/api/company/register',
         formDataToSend,
         {
           headers: {
@@ -251,30 +608,33 @@ const CompanyRegistrationForm = () => {
   const minDateTime = getCurrentDateTime();
 
   return (
-    <div className="form-container">
-      <div className="form-wrapper">
+    <div style={styles.container}>
+      <div style={styles.wrapper}>
         {/* Header */}
-        <div className="form-header">
-          <div className="form-icon">🏢</div>
-          <h2 className="form-title">Add New Company</h2>
-          <p className="form-subtitle">
+        <div style={styles.header}>
+          <div style={styles.icon}>🏢</div>
+          <h2 style={styles.title}>Add New Company</h2>
+          <p style={styles.subtitle}>
             Register a new company and job role for campus placements
           </p>
         </div>
 
         {/* Message Alert */}
         {message.text && (
-          <div className={`message-alert ${message.type === 'success' ? 'message-success' : 'message-error'}`}>
+          <div style={{
+            ...styles.alert,
+            ...(message.type === 'success' ? styles.successAlert : styles.errorAlert)
+          }}>
             {message.type === 'success' ? '✅' : '❌'} {message.text}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-grid">
+          <div style={styles.grid}>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">🏢</span>
-                Company Name <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>🏢</span>
+                Company Name <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="text"
@@ -283,14 +643,14 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 placeholder="Enter company name"
                 required
-                className="form-input"
+                style={styles.input}
                 disabled={loading}
               />
             </div>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">💼</span>
-                Job Role <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>💼</span>
+                Job Role <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="text"
@@ -299,20 +659,20 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 placeholder="Enter job role"
                 required
-                className="form-input"
+                style={styles.input}
                 disabled={loading}
               />
             </div>
           </div>
 
           {/* Alumni Company Radio Button */}
-          <div className="form-group">
-            <label className="form-label">
-              <span className="form-label-icon">🎓</span>
-              Alumni Company? <span className="required-asterisk">*</span>
+          <div style={styles.group}>
+            <label style={styles.label}>
+              <span style={styles.labelIcon}>🎓</span>
+              Alumni Company? <span style={styles.asterisk}>*</span>
             </label>
-            <div className="radio-group">
-              <label className="radio-label">
+            <div style={styles.radioGroup}>
+              <label style={styles.radioLabel}>
                 <input
                   type="radio"
                   name="isAlumniCompany"
@@ -320,11 +680,11 @@ const CompanyRegistrationForm = () => {
                   checked={formData.isAlumniCompany === true}
                   onChange={handleChange}
                   disabled={loading}
-                  className="radio-input"
+                  style={styles.radioInput}
                 />
                 <span>Yes</span>
               </label>
-              <label className="radio-label">
+              <label style={styles.radioLabel}>
                 <input
                   type="radio"
                   name="isAlumniCompany"
@@ -332,7 +692,7 @@ const CompanyRegistrationForm = () => {
                   checked={formData.isAlumniCompany === false}
                   onChange={handleChange}
                   disabled={loading}
-                  className="radio-input"
+                  style={styles.radioInput}
                 />
                 <span>No</span>
               </label>
@@ -340,21 +700,21 @@ const CompanyRegistrationForm = () => {
           </div>
 
           {/* Skillset with Tags */}
-          <div className="form-group">
-            <label className="form-label">
-              <span className="form-label-icon">⚡</span>
-              Required Skills <span className="required-asterisk">*</span>
+          <div style={styles.group}>
+            <label style={styles.label}>
+              <span style={styles.labelIcon}>⚡</span>
+              Required Skills <span style={styles.asterisk}>*</span>
             </label>
             
             {/* Skills Tags Container */}
-            <div className="skills-tags-container">
+            <div style={styles.skillsContainer}>
               {formData.requiredSkills.map((skill, index) => (
-                <div key={index} className="skill-tag">
+                <div key={index} style={styles.skillTag}>
                   <span>{skill}</span>
                   <button
                     type="button"
                     onClick={() => removeSkill(skill)}
-                    className="skill-tag-remove"
+                    style={styles.skillTagRemove}
                     disabled={loading}
                   >
                     <XCircle size={14} />
@@ -364,36 +724,36 @@ const CompanyRegistrationForm = () => {
             </div>
 
             {/* Skill Input with Add Button */}
-            <div className="skill-input-wrapper">
+            <div style={styles.skillInputWrapper}>
               <input
                 ref={skillInputRef}
                 type="text"
                 value={currentSkill}
                 onChange={handleSkillInputChange}
                 onKeyDown={handleSkillKeyDown}
-                className="form-input skill-input"
+                style={{...styles.input, ...styles.skillInput}}
                 placeholder="Type a skill and press Enter or comma"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={handleAddSkillClick}
-                className="add-skill-button"
+                style={styles.addSkillButton}
                 disabled={loading || !currentSkill.trim()}
               >
                 <Plus size={18} />
               </button>
             </div>
-            <p className="input-hint">
+            <p style={styles.hint}>
               Press Enter, Tab, or comma to add skill. Click on skill to remove.
             </p>
           </div>
 
-          <div className="form-grid">
+          <div style={styles.grid}>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">💰</span>
-                CTC Offered <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>💰</span>
+                CTC Offered <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="text"
@@ -402,14 +762,14 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 placeholder="e.g., 8 LPA"
                 required
-                className="form-input"
+                style={styles.input}
                 disabled={loading}
               />
             </div>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">📍</span>
-                Location <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>📍</span>
+                Location <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="text"
@@ -418,17 +778,17 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 placeholder="Job location"
                 required
-                className="form-input"
+                style={styles.input}
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div className="form-grid">
+          <div style={styles.grid}>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">📅</span>
-                Application Deadline <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>📅</span>
+                Application Deadline <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="datetime-local"
@@ -437,22 +797,25 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 min={minDateTime}
                 required
-                className={`form-input ${deadlineError ? 'input-error' : ''}`}
+                style={{
+                  ...styles.input,
+                  ...(deadlineError ? styles.inputError : {})
+                }}
                 disabled={loading}
               />
               {deadlineError && (
-                <div className="error-message">
+                <div style={styles.errorMessage}>
                   ⚠️ {deadlineError}
                 </div>
               )}
-              <p className="input-hint">
+              <p style={styles.hint}>
                 Select a future date and time (at least 1 day from now)
               </p>
             </div>
             <div>
-              <label className="form-label">
-                <span className="form-label-icon">🔗</span>
-                Application Link <span className="required-asterisk">*</span>
+              <label style={styles.label}>
+                <span style={styles.labelIcon}>🔗</span>
+                Application Link <span style={styles.asterisk}>*</span>
               </label>
               <input
                 type="url"
@@ -461,16 +824,16 @@ const CompanyRegistrationForm = () => {
                 onChange={handleChange}
                 placeholder="Apply / registration link"
                 required
-                className="form-input"
+                style={styles.input}
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <span className="form-label-icon">📝</span>
-              Job Description <span className="required-asterisk">*</span>
+          <div style={styles.group}>
+            <label style={styles.label}>
+              <span style={styles.labelIcon}>📝</span>
+              Job Description <span style={styles.asterisk}>*</span>
             </label>
             <textarea
               name="jobDescription"
@@ -479,24 +842,24 @@ const CompanyRegistrationForm = () => {
               placeholder="Enter detailed job description..."
               rows="4"
               required
-              className="form-textarea"
+              style={styles.textarea}
               disabled={loading}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <span className="form-label-icon">🖼️</span>
+          <div style={styles.group}>
+            <label style={styles.label}>
+              <span style={styles.labelIcon}>🖼️</span>
               Company Poster
             </label>
             <input
               type="file"
               onChange={handleFileChange}
               accept="image/*,.pdf"
-              className="file-input"
+              style={styles.fileInput}
               disabled={loading}
             />
-            <p className="file-hint">
+            <p style={styles.fileHint}>
               Drag and drop or click to upload poster / brochure (Max 5MB)
             </p>
           </div>
@@ -504,13 +867,16 @@ const CompanyRegistrationForm = () => {
           <button
             type="submit"
             disabled={loading || deadlineError}
-            className={`submit-button ${deadlineError ? 'button-disabled' : ''}`}
+            style={{
+              ...styles.submitButton,
+              ...(deadlineError ? styles.buttonDisabled : {})
+            }}
           >
             {loading ? 'Registering...' : 'Add Company'}
           </button>
         </form>
 
-        <div className="form-footer">
+        <div style={styles.footer}>
           {loading && 'Processing... Please wait'}
         </div>
       </div>
