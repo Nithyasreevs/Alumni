@@ -9,8 +9,14 @@ const InterviewResultsView = () => {
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  // FIX: Add /api to the base URL
+  const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE = `${API_BASE_URL}/api`; // This is what you need
+  
+  console.log('API Base URL:', API_BASE); // Debug log
+
   // Fetch all alumni with company count
   useEffect(() => {
     fetchAlumniWithCounts();
@@ -19,23 +25,32 @@ const InterviewResultsView = () => {
   const fetchAlumniWithCounts = async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Fetch all mappings
-      const mappingsRes = await fetch(`${API_BASE_URL}/company-mapping`);
-      const mappingsData = await mappingsRes.json();
+      // Use API_BASE which includes /api
+      const apiUrl = `${API_BASE}/company-mapping`;
+      console.log('Fetching from:', apiUrl);
       
-      if (mappingsData.success) {
-        // Group by alumni and count companies
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('API Response:', result);
+      
+      if (result.success && result.data) {
         const alumniMap = new Map();
         
-        mappingsData.data.forEach(mapping => {
+        result.data.forEach(mapping => {
           const alumniId = mapping.alumni_user_id;
           if (!alumniMap.has(alumniId)) {
             alumniMap.set(alumniId, {
               id: alumniId,
-              name: mapping.alumniName,
-              batch: mapping.alumniBatch,
-              email: mapping.alumniEmail,
+              name: mapping.alumniName || 'Unknown',
+              batch: mapping.alumniBatch || 'Unknown',
+              email: mapping.alumniEmail || 'No email',
               companyCount: 0,
               appliedCount: 0,
               selectedCount: 0
@@ -54,9 +69,12 @@ const InterviewResultsView = () => {
         });
         
         setAlumniList(Array.from(alumniMap.values()));
+      } else {
+        setError('No data received from API');
       }
     } catch (error) {
       console.error('Error fetching alumni:', error);
+      setError(`Failed to load data: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -66,44 +84,42 @@ const InterviewResultsView = () => {
     try {
       setDetailsLoading(true);
       
-      // First, fetch companies assigned to this alumni
-      const companiesRes = await fetch(`${API_BASE_URL}/company-mapping/alumni/${alumni.id}`);
+      // Use API_BASE which includes /api
+      const companiesRes = await fetch(`${API_BASE}/company-mapping/alumni/${alumni.id}`);
       const companiesData = await companiesRes.json();
       
       if (companiesData.success) {
         setCompaniesAssigned(companiesData.data || []);
       }
       
-      // Then, fetch alumni details from members collection using email
-      const memberRes = await fetch(`${API_BASE_URL}/members/email/${encodeURIComponent(alumni.email)}`);
+      // Use API_BASE which includes /api
+      const memberRes = await fetch(`${API_BASE}/members/email/${encodeURIComponent(alumni.email)}`);
       const memberData = await memberRes.json();
       
       if (memberData.success && memberData.member) {
         setAlumniDetails({
-          name: memberData.member.name || alumni.name || 'N/A',
-          email: memberData.member.email || alumni.email || 'N/A',
-          phone: memberData.member.mobile || 'N/A',
-          batch: memberData.member.batch || alumni.batch || 'N/A',
-          skills: [] // You can add skills if available
+          name: memberData.member.name || alumni.name,
+          email: memberData.member.email || alumni.email,
+          phone: memberData.member.mobile || 'Not available',
+          batch: memberData.member.batch || alumni.batch,
+          skills: []
         });
       } else {
-        // If member API fails, use the data from alumni list
         setAlumniDetails({
-          name: alumni.name || 'N/A',
-          email: alumni.email || 'N/A',
+          name: alumni.name,
+          email: alumni.email,
           phone: 'Not available',
-          batch: alumni.batch || 'N/A',
+          batch: alumni.batch,
           skills: []
         });
       }
     } catch (error) {
       console.error('Error fetching alumni details:', error);
-      // Fallback to alumni list data
       setAlumniDetails({
-        name: alumni.name || 'N/A',
-        email: alumni.email || 'N/A',
+        name: alumni.name,
+        email: alumni.email,
         phone: 'Not available',
-        batch: alumni.batch || 'N/A',
+        batch: alumni.batch,
         skills: []
       });
     } finally {
@@ -170,18 +186,54 @@ const InterviewResultsView = () => {
             </div>
           </div>
 
+          {error && (
+            <div style={{ 
+              background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', 
+              borderRadius: '12px', 
+              padding: '1rem', 
+              marginBottom: '1rem',
+              border: '1px solid #ef4444',
+              color: '#7f1d1d'
+            }}>
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
           {/* Alumni List */}
           <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '2px solid #f3f4f6' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1f2937' }}>
                 Alumni List ({filteredAlumni.length})
               </h2>
+              {!loading && !error && (
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  Using API: {API_BASE}
+                </div>
+              )}
             </div>
 
             {loading ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
                 <div style={{ width: '50px', height: '50px', border: '4px solid #f3f4f6', borderTop: '4px solid #667eea', borderRadius: '50%', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }}></div>
                 Loading alumni...
+              </div>
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                <div style={{ color: '#ef4444', fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+                <p style={{ marginBottom: '1rem' }}>{error}</p>
+                <button 
+                  onClick={fetchAlumniWithCounts}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Retry
+                </button>
               </div>
             ) : filteredAlumni.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>

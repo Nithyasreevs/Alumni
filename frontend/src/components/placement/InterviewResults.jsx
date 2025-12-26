@@ -19,7 +19,9 @@ const InterviewResults = () => {
   const [coordinatorRemark, setCoordinatorRemark] = useState('');
   const [isSavingFinalStatus, setIsSavingFinalStatus] = useState(false);
 
-  const API_BASE = 'http://localhost:5000/api';
+  // CORRECTED: Use environment variable or fallback
+  const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE = `${API_BASE_URL}/api`; // Add /api to the base URL
 
   // Fetch all alumni with company count
   useEffect(() => {
