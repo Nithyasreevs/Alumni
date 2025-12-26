@@ -609,13 +609,34 @@ export default function ScheduledDashboard() {
               const meetingStatuses = statusesMap[m.meetingId] || [];
 
               let approvalBadge = null;
+              
+              // ✅ UPDATED LOGIC: Check approval status first, then check if status is Postponed with Approved approval
               const pendingStatus = meetingStatuses.find((s) => s.statusApproval === "Pending");
               const approvedStatus = meetingStatuses.find((s) => s.statusApproval === "Approved");
               const rejectedStatus = meetingStatuses.find((s) => s.statusApproval === "Rejected");
+              
+              // Check meeting statuses
+              const hasPostponedStatus = meetingStatuses.some(s => s.status === "Postponed");
+              const hasCancelledStatus = meetingStatuses.some(s => s.status === "Cancelled");
+              const hasCompletedAndApproved = meetingStatuses.some(s => 
+                s.status === "Completed" && s.statusApproval === "Approved"
+              );
 
-              if (pendingStatus) approvalBadge = pendingStatus.statusApproval;
-              if (approvedStatus) approvalBadge = approvedStatus.statusApproval;
-              if (rejectedStatus) approvalBadge = rejectedStatus.statusApproval;
+              if (hasCompletedAndApproved) {
+                // If meeting is completed and approved, show "Approved"
+                approvalBadge = "Approved";
+              } else if (hasPostponedStatus && approvedStatus) {
+                // If status is Postponed AND approval is Approved, show "Postponed"
+                approvalBadge = "Postponed";
+              } else if (hasCancelledStatus) {
+                // If status is Cancelled, show "Cancelled"
+                approvalBadge = "Cancelled";
+              } else {
+                // Otherwise, show the approval status (Pending/Approved/Rejected)
+                if (pendingStatus) approvalBadge = pendingStatus.statusApproval;
+                if (approvedStatus) approvalBadge = approvedStatus.statusApproval;
+                if (rejectedStatus) approvalBadge = rejectedStatus.statusApproval;
+              }
 
               // Find the mentee that matches the logged-in user (if not mentor)
               const targetMentee = !isMentorUser

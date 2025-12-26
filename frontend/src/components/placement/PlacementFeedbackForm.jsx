@@ -1,5 +1,5 @@
 // Frontend - PlacementFeedbackForm.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./PlacementFeedbackForm.css";
 
@@ -11,9 +11,14 @@ const PlacementFeedbackForm = () => {
     name: "",
     batch: "",
     mobile: "",
+    hasRequested: false,
+    requestStatus: null
   });
   const [loading, setLoading] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [dropdownEmails, setDropdownEmails] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loadingEmails, setLoadingEmails] = useState(false);
 
   // Function to validate email format
   const isValidEmail = (email) => {
@@ -21,11 +26,37 @@ const PlacementFeedbackForm = () => {
     return emailRegex.test(email);
   };
 
+  // Fetch all placement request emails on component mount
+  useEffect(() => {
+    fetchPlacementRequestEmails();
+  }, []);
+
+  // Function to fetch all emails from placement requests
+  const fetchPlacementRequestEmails = async () => {
+    try {
+      setLoadingEmails(true);
+      const res = await axios.get("http://localhost:5000/api/placement-requests");
+      
+      if (res.data.success && res.data.data) {
+        // Extract unique emails from placement requests
+        const uniqueEmails = [...new Set(res.data.data
+          .filter(item => item.userEmail && item.userEmail !== 'N/A')
+          .map(item => item.userEmail))];
+        
+        setDropdownEmails(uniqueEmails);
+      }
+    } catch (err) {
+      console.error("Error fetching placement request emails:", err);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
+
   // Fetch user details from backend
   const fetchUserDetails = async (emailValue) => {
     // Validate email format
     if (!isValidEmail(emailValue)) {
-      setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+      setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
       return;
     }
 
@@ -35,6 +66,19 @@ const PlacementFeedbackForm = () => {
       // Encode email to handle special characters
       const encodedEmail = encodeURIComponent(emailValue);
       
+      // First check if user has placement request
+      const placementCheckRes = await axios.get(
+        `http://localhost:5000/api/placement-requests/check/${encodedEmail}`
+      );
+
+      if (placementCheckRes.data.success && !placementCheckRes.data.hasRequested) {
+        alert("This user has not submitted any placement request! Only users with placement requests can give feedback.");
+        setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
+        setEmail("");
+        return;
+      }
+
+      // If user has placement request, fetch their details
       const res = await axios.get(
         `http://localhost:5000/api/members/email/${encodedEmail}`
       );
@@ -47,7 +91,7 @@ const PlacementFeedbackForm = () => {
         
         if (!userId) {
           alert("User ID not found!");
-          setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+          setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
           return;
         }
 
@@ -56,14 +100,16 @@ const PlacementFeedbackForm = () => {
           name: res.data.member.name || "",
           batch: res.data.member.batch || "",
           mobile: res.data.member.mobile || "",
+          hasRequested: placementCheckRes.data.hasRequested,
+          requestStatus: placementCheckRes.data.requestStatus
         });
       } else {
-        setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+        setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
         alert("User not found with this email!");
       }
     } catch (err) {
       console.log("Error fetching user:", err);
-      setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+      setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
       
       if (err.response && err.response.status === 404) {
         alert("User not found with this email!");
@@ -72,6 +118,7 @@ const PlacementFeedbackForm = () => {
       }
     } finally {
       setLoading(false);
+      setShowDropdown(false);
     }
   };
 
@@ -79,6 +126,16 @@ const PlacementFeedbackForm = () => {
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
+    setShowDropdown(true);
+
+    // Filter dropdown based on input
+    if (value.trim()) {
+      const filtered = dropdownEmails.filter(email => 
+        email.toLowerCase().includes(value.toLowerCase())
+      );
+      // Update dropdown with filtered results
+      // Keep all emails in state but only show filtered ones
+    }
 
     if (typingTimeout) clearTimeout(typingTimeout);
 
@@ -87,12 +144,19 @@ const PlacementFeedbackForm = () => {
       setTypingTimeout(
         setTimeout(() => {
           fetchUserDetails(value);
-        }, 500) // Increased delay to 500ms
+        }, 500)
       );
     } else {
       // Clear data if email is not valid
-      setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+      setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
     }
+  };
+
+  // Handle email selection from dropdown
+  const handleEmailSelect = (selectedEmail) => {
+    setEmail(selectedEmail);
+    setShowDropdown(false);
+    fetchUserDetails(selectedEmail);
   };
 
   // Submit feedback
@@ -106,6 +170,11 @@ const PlacementFeedbackForm = () => {
 
     if (!autoData.userId) {
       alert("Please enter a valid email to fetch user details!");
+      return;
+    }
+
+    if (!autoData.hasRequested) {
+      alert("This user has not submitted any placement request! Only users with placement requests can give feedback.");
       return;
     }
 
@@ -127,7 +196,7 @@ const PlacementFeedbackForm = () => {
         // Reset form
         setEmail("");
         setFeedback("");
-        setAutoData({ userId: "", name: "", batch: "", mobile: "" });
+        setAutoData({ userId: "", name: "", batch: "", mobile: "", hasRequested: false, requestStatus: null });
       } else {
         alert("Failed to submit feedback: " + response.data.message);
       }
@@ -147,6 +216,11 @@ const PlacementFeedbackForm = () => {
     }
   };
 
+  // Filter emails for dropdown based on input
+  const filteredEmails = dropdownEmails.filter(item => 
+    email.trim() === "" || item.toLowerCase().includes(email.toLowerCase())
+  );
+
   return (
     <div className="feedback-container">
       <div className="feedback-wrapper">
@@ -154,28 +228,62 @@ const PlacementFeedbackForm = () => {
           <div className="feedback-icon">⭐</div>
           <h2 className="feedback-title">Coordinator Feedback</h2>
           <p className="feedback-subtitle">
-            Help us improve by sharing feedback on this placement experience
+            Provide feedback for alumni who have submitted placement requests
           </p>
         </div>
 
-        {/* Email input */}
-        <div className="feedback-field">
+        {/* Email input with dropdown */}
+        <div className="feedback-field" style={{ position: 'relative' }}>
           <label className="feedback-label">
             <span className="feedback-label-icon">📧</span>
-            Enter Email ID <span className="required-star">*</span>
+            Select Alumni Email <span className="required-star">*</span>
+            {loadingEmails && <span style={{ fontSize: '12px', color: '#666', marginLeft: '10px' }}>(Loading placement request users...)</span>}
           </label>
           <input
             type="email"
             value={email}
             onChange={handleEmailChange}
-            placeholder="Enter complete email (e.g., user@domain.com)"
+            onFocus={() => setShowDropdown(true)}
+            placeholder="Select or type email of alumni with placement request"
             className="feedback-input"
             required
+            list="email-list"
           />
+          
+          {/* Dropdown for email selection */}
+          {showDropdown && filteredEmails.length > 0 && (
+            <div className="email-dropdown">
+              {filteredEmails.slice(0, 10).map((emailItem, index) => (
+                <div
+                  key={index}
+                  className="dropdown-item"
+                  onClick={() => handleEmailSelect(emailItem)}
+                >
+                  {emailItem}
+                </div>
+              ))}
+              {filteredEmails.length > 10 && (
+                <div className="dropdown-item" style={{ color: '#666', fontStyle: 'italic' }}>
+                  ... and {filteredEmails.length - 10} more
+                </div>
+              )}
+            </div>
+          )}
+          
           {loading && <p style={{ color: "blue", fontSize: "14px", marginTop: "5px" }}>Fetching user details...</p>}
           {email && !isValidEmail(email) && (
             <p style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
               Please enter a valid email address
+            </p>
+          )}
+          {autoData.hasRequested && autoData.requestStatus && (
+            <p style={{ color: "green", fontSize: "12px", marginTop: "5px" }}>
+              ✓ User has placement request (Status: {autoData.requestStatus})
+            </p>
+          )}
+          {email && isValidEmail(email) && !autoData.hasRequested && autoData.userId && (
+            <p style={{ color: "red", fontSize: "12px", marginTop: "5px" }}>
+              ✗ This user has not submitted any placement request
             </p>
           )}
         </div>
@@ -241,7 +349,7 @@ const PlacementFeedbackForm = () => {
         <button
           onClick={handleSubmit}
           className="feedback-submit-button"
-          disabled={!autoData.userId || !feedback.trim()}
+          disabled={!autoData.userId || !feedback.trim() || !autoData.hasRequested}
         >
           Submit Feedback
         </button>

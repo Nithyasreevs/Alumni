@@ -443,5 +443,52 @@ router.get('/user/:userId', async (req, res) => {
     });
   }
 });
+// Backend - GET /api/placement-requests - Fetch all placement requests with emails
+router.get('/', async (req, res) => {
+  try {
+    const jobRequests = await JobRequest.find()
+      .sort({ requested_on: -1 })
+      .select('-__v');
+    
+    // Get user details from 'test' database
+    const memberCollection = mongoose.connection.client
+      .db("test")
+      .collection("members");
+    
+    const enrichedRequests = await Promise.all(
+      jobRequests.map(async (request) => {
+        let member = null;
+        try {
+          member = await memberCollection.findOne({
+            _id: new mongoose.Types.ObjectId(request.alumni_user_id)
+          });
+        } catch (err) {
+          console.log('Invalid ObjectId:', request.alumni_user_id);
+        }
+        
+        return {
+          ...request.toObject(),
+          userName: member?.basic?.name || 'N/A',
+          userBatch: member?.basic?.label || 'N/A',
+          userContact: member?.contact_details?.mobile || 'N/A',
+          userEmail: member?.basic?.email_id || 'N/A'
+        };
+      })
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Placement requests fetched successfully',
+      data: enrichedRequests 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error', 
+      error: err.message 
+    });
+  }
+});
 
 module.exports = router;

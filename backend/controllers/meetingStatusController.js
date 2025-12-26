@@ -97,6 +97,9 @@ exports.updateMeetingStatus = async (req, res) => {
       ? [menteeId]
       : [];
 
+    // ✅ Check both field names for postponed reason
+    const reasonForPostponed = postponed_reason || postponedReason;
+    
     // Status-specific validations
     if (status === "Completed" && !meetingMinutes) {
       return res.status(400).json({
@@ -104,8 +107,7 @@ exports.updateMeetingStatus = async (req, res) => {
       });
     }
 
-    // ✅ Check both field names for postponed reason
-    const reasonForPostponed = postponed_reason || postponedReason;
+    // For Postponed status, check if we have a reason
     if (status === "Postponed" && !reasonForPostponed) {
       return res.status(400).json({
         message: "Postponed reason required for postponed status"
@@ -127,26 +129,26 @@ exports.updateMeetingStatus = async (req, res) => {
         continue;
       }
 
-      // ✅ Update with correct field handling
+      // ✅ Prepare update data
       const updateData = {
         mentor_user_id: mentor._id,
         status,
         statusApproval: "Pending",
-        phaseId: phaseIdNum
+        phaseId: phaseIdNum,
+        // Clear both fields initially
+        meeting_minutes: "",
+        postponed_reason: ""
       };
 
-      // Set appropriate fields based on status
+      // ✅ SET meeting_minutes BASED ON STATUS
       if (status === "Completed") {
+        // For Completed: Store meeting minutes in meeting_minutes
         updateData.meeting_minutes = meetingMinutes || "";
-        updateData.postponed_reason = "";
       } else if (status === "Postponed") {
-        updateData.meeting_minutes = "";
-        updateData.postponed_reason = reasonForPostponed || "";
-      } else {
-        // For other statuses (Cancelled, In Progress, etc.)
-        updateData.meeting_minutes = "";
-        updateData.postponed_reason = "";
+        // For Postponed: Store postponed reason in meeting_minutes
+        updateData.meeting_minutes = reasonForPostponed || "";
       }
+      // For other statuses, meeting_minutes remains empty
 
       const updatedStatus = await MeetingStatus.findOneAndUpdate(
         { 

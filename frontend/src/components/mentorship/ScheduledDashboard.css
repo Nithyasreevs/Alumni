@@ -819,3 +819,11 @@ body {
     margin: 10px;
   }
 }
+.approval-badge.postponed {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: white;
+}
+.approval-badge.cancelled {
+  background: linear-gradient(135deg, #757575, #424242);
+  color: white;
+}
