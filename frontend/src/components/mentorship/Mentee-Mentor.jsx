@@ -120,7 +120,7 @@ export default function MenteeMentorAssignment() {
 
   return (
     <div className="form-wrapper">
-      <button className="dashboard-btn" onClick={() => (window.location.href = "/")}>
+      <button className="dashboard-btn" onClick={() => (window.location.href = "/dashboard")}>
         ← Go to Dashboard
       </button>
 

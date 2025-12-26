@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const placementDB = require('../config/placementDB');
-
 const mongoose = require('mongoose');
 
-// ========== COMPANY MAPPING SCHEMA ==========
+// ========== COMPANY MAPPING SCHEMA (Updated with new fields) ==========
 const companyMappingSchema = new mongoose.Schema({
   mapping_id: { 
     type: Number, 
@@ -25,12 +24,22 @@ const companyMappingSchema = new mongoose.Schema({
   },
   alumni_status: { 
     type: String,
-    enum: ['Not Applied', 'Applied','Rejected', 'In Process', 'Selected'],
+    enum: ['Not Applied', 'Applied', 'Rejected', 'In Process', 'Selected'],
     default: 'Not Applied'
   },
   remarks: { 
     type: String,
     default: null 
+  },
+  // NEW FIELDS FROM SECOND FILE
+  final_status: {
+    type: String,
+    enum: ['Closure', 'Not Doable', null],
+    default: null
+  },
+  coordinator_remark: {
+    type: String,
+    default: null
   },
   last_updated_on: {
     type: Date,
@@ -122,7 +131,7 @@ router.post('/assign-multiple', async (req, res) => {
         newMappings.push({
           company_id: parseInt(company_id),
           company_name: companyExists.name,
-          is_alumni_company: companyExists.is_alumni_company || false // ADD THIS
+          is_alumni_company: companyExists.is_alumni_company || false
         });
       }
     }
@@ -139,6 +148,8 @@ router.post('/assign-multiple', async (req, res) => {
         assigned_on: new Date(),
         alumni_status: 'Not Applied',
         remarks: remarks || null,
+        final_status: null,
+        coordinator_remark: null,
         last_updated_on: new Date()
       });
       
@@ -186,7 +197,7 @@ router.get('/available-companies', async (req, res) => {
       .project({
         company_id: 1,
         name: 1,
-        is_alumni_company: 1, // ADD THIS
+        is_alumni_company: 1,
         role: 1,
         location: 1,
         ctc_offered: 1,
@@ -197,11 +208,9 @@ router.get('/available-companies', async (req, res) => {
       })
       .toArray();
     
-    // ADD LOGIC TO HIGHLIGHT ALUMNI COMPANIES
     const formattedCompanies = companies.map(company => ({
       ...company,
       is_alumni_company: company.is_alumni_company || false,
-      // Add a flag for frontend to highlight
       highlight_alumni: company.is_alumni_company === true
     }));
     
@@ -226,7 +235,7 @@ router.get('/alumni/:alumniId/assigned-companies', async (req, res) => {
     const alumniId = req.params.alumniId;
     
     const mappings = await CompanyMapping.find({ alumni_user_id: alumniId })
-      .select('company_id alumni_status')
+      .select('company_id alumni_status final_status coordinator_remark')
       .lean();
     
     const companyIds = mappings.map(m => m.company_id);
@@ -250,7 +259,7 @@ router.get('/alumni/:alumniId/assigned-companies', async (req, res) => {
   }
 });
 
-// ========== EXISTING ROUTES (UPDATED) ==========
+// ========== EXISTING ROUTES ==========
 
 // POST /api/company-mapping - Assign company to alumni
 router.post('/', async (req, res) => {
@@ -291,7 +300,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Check if company exists in company_registration collection (placement DB)
+    // Check if company exists
     const companyCollection = mongoose.connection.client
       .db("placement")
       .collection("company_registration");
@@ -332,6 +341,8 @@ router.post('/', async (req, res) => {
       assigned_on: new Date(),
       alumni_status: 'Not Applied',
       remarks: remarks || null,
+      final_status: null,
+      coordinator_remark: null,
       last_updated_on: new Date()
     });
     
@@ -354,7 +365,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/company-mapping - Get all mappings with details (UPDATED)
+// GET /api/company-mapping - Get all mappings with details
 router.get('/', async (req, res) => {
   try {
     const mappings = await CompanyMapping.find().sort({ assigned_on: -1 });
@@ -391,9 +402,8 @@ router.get('/', async (req, res) => {
           companyRole: company?.role || 'N/A',
           companyLocation: company?.location || 'N/A',
           companyCtc: company?.ctc_offered || 'N/A',
-          // ADD THIS - Check if company is alumni company
           isAlumniCompany: company?.is_alumni_company || false,
-          highlightAlumni: company?.is_alumni_company === true // Flag for frontend highlighting
+          highlightAlumni: company?.is_alumni_company === true
         };
       })
     );
@@ -413,7 +423,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/company-mapping/alumni/:alumniId - Get mappings for specific alumni (UPDATED)
+// GET /api/company-mapping/alumni/:alumniId - Get mappings for specific alumni
 router.get('/alumni/:alumniId', async (req, res) => {
   try {
     const alumniId = req.params.alumniId;
@@ -446,9 +456,8 @@ router.get('/alumni/:alumniId', async (req, res) => {
           companySkills: company?.skills_required || 'N/A',
           companyDeadline: company?.deadline || null,
           companyLink: company?.link || null,
-          // ADD THIS - Check if company is alumni company
           isAlumniCompany: company?.is_alumni_company || false,
-          highlightAlumni: company?.is_alumni_company === true // Flag for frontend highlighting
+          highlightAlumni: company?.is_alumni_company === true
         };
       })
     );
@@ -468,11 +477,11 @@ router.get('/alumni/:alumniId', async (req, res) => {
   }
 });
 
-// PATCH /api/company-mapping/:mappingId - Update mapping status
+// PATCH /api/company-mapping/:mappingId - Update mapping (Updated with new fields)
 router.patch('/:mappingId', async (req, res) => {
   try {
     const mappingId = parseInt(req.params.mappingId);
-    const { alumni_status, remarks } = req.body;
+    const { alumni_status, remarks, final_status, coordinator_remark } = req.body;
 
     if (isNaN(mappingId)) {
       return res.status(400).json({ 
@@ -481,17 +490,28 @@ router.patch('/:mappingId', async (req, res) => {
       });
     }
 
+    // Validate alumni_status
     const validStatuses = ['Not Applied', 'Applied', 'In Process', 'Selected', 'Rejected'];
     if (alumni_status && !validStatuses.includes(alumni_status)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid status. Valid values: Not Applied, Applied, In Process, Selected, Rejected' 
+        message: 'Invalid alumni status. Valid values: Not Applied, Applied, In Process, Selected, Rejected' 
+      });
+    }
+
+    // Validate final_status (if provided)
+    if (final_status !== undefined && final_status !== null && !['Closure', 'Not Doable'].includes(final_status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid final status. Valid values: Closure, Not Doable, or null' 
       });
     }
 
     const updateData = { last_updated_on: new Date() };
-    if (alumni_status) updateData.alumni_status = alumni_status;
+    if (alumni_status !== undefined) updateData.alumni_status = alumni_status;
     if (remarks !== undefined) updateData.remarks = remarks;
+    if (final_status !== undefined) updateData.final_status = final_status;
+    if (coordinator_remark !== undefined) updateData.coordinator_remark = coordinator_remark;
 
     const mapping = await CompanyMapping.findOneAndUpdate(
       { mapping_id: mappingId },
@@ -556,7 +576,7 @@ router.delete('/:mappingId', async (req, res) => {
   }
 });
 
-// GET /api/company-mapping/company/:companyId - Get all alumni assigned to a company (UPDATED)
+// GET /api/company-mapping/company/:companyId - Get all alumni assigned to a company
 router.get('/company/:companyId', async (req, res) => {
   try {
     const companyId = parseInt(req.params.companyId);
@@ -579,7 +599,6 @@ router.get('/company/:companyId', async (req, res) => {
       .db("placement")
       .collection("company_registration");
     
-    // Get company details to check if it's an alumni company
     const company = await companyCollection.findOne({ company_id: companyId });
     
     const enrichedMappings = await Promise.all(
@@ -600,7 +619,6 @@ router.get('/company/:companyId', async (req, res) => {
           alumniBatch: member?.basic?.label || 'N/A',
           alumniEmail: member?.basic?.email_id || 'N/A',
           alumniMobile: member?.contact_details?.mobile || 'N/A',
-          // ADD THIS - Include company alumni status
           isAlumniCompany: company?.is_alumni_company || false,
           highlightAlumni: company?.is_alumni_company === true
         };
@@ -628,7 +646,7 @@ router.get('/company/:companyId', async (req, res) => {
   }
 });
 
-// Add this route to get alumni by email
+// GET /api/company-mapping/members/email/:email - Get alumni by email
 router.get('/members/email/:email', async (req, res) => {
   try {
     const email = req.params.email;

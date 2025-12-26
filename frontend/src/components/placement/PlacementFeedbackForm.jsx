@@ -3,9 +3,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./PlacementFeedbackForm.css";
 
-// API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
 const PlacementFeedbackForm = () => {
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -39,7 +36,7 @@ const PlacementFeedbackForm = () => {
       const encodedEmail = encodeURIComponent(emailValue);
       
       const res = await axios.get(
-        `${API_BASE_URL}/api/members/email/${encodedEmail}`
+        `http://localhost:5000/api/members/email/${encodedEmail}`
       );
 
       console.log("Backend response:", res.data);
@@ -115,7 +112,7 @@ const PlacementFeedbackForm = () => {
     try {
       // Submit feedback with MongoDB _id as string
       const response = await axios.post(
-        `${API_BASE_URL}/api/feedback/submit-feedback`,
+        "http://localhost:5000/api/feedback/submit-feedback",
         {
           user_id: autoData.userId, // MongoDB _id as string
           feedback_text: feedback

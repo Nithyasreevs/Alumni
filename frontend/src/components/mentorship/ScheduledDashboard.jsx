@@ -19,6 +19,7 @@ export default function ScheduledDashboard() {
   const [selectedMeeting, setSelectedMeeting] = useState(null); // Selected meeting for editing
   const [editFormData, setEditFormData] = useState({}); // Form data for editing
   const [mentorMeetings, setMentorMeetings] = useState([]); // All meetings for mentor dropdown
+  const [uniqueUserDates, setUniqueUserDates] = useState([]); // Store unique dates for the logged-in user
 
   const navigate = useNavigate();
   const { email } = useParams();
@@ -39,6 +40,46 @@ export default function ScheduledDashboard() {
       }
     }
   }, [email]);
+
+  // Function to extract unique dates for the logged-in user
+  const extractUserDates = (meetingsData) => {
+    if (!meetingsData || meetingsData.length === 0) return [];
+    
+    const userDatesSet = new Set();
+    
+    meetingsData.forEach(meeting => {
+      if (meeting.date) {
+        // Extract just the date part (YYYY-MM-DD)
+        const dateOnly = meeting.date.slice(0, 10);
+        userDatesSet.add(dateOnly);
+      }
+    });
+    
+    // Convert Set to array and sort dates
+    return Array.from(userDatesSet).sort();
+  };
+
+  // Update uniqueUserDates when meetings change
+  useEffect(() => {
+    if (meetings.length > 0) {
+      const userDates = extractUserDates(meetings);
+      setUniqueUserDates(userDates);
+    } else {
+      setUniqueUserDates([]);
+    }
+  }, [meetings]);
+
+  // ✅ NEW FUNCTION: Check if meeting is completed and approved (DISABLE FOR ALL)
+  const isMeetingCompletedAndApproved = (meetingId) => {
+    const meetingStatuses = statusesMap[meetingId] || [];
+    
+    // Check if ANY mentee has status "Completed" AND statusApproval "Approved"
+    const hasCompletedAndApproved = meetingStatuses.some(s => 
+      s.status === "Completed" && s.statusApproval === "Approved"
+    );
+    
+    return hasCompletedAndApproved; // Return true to disable button
+  };
 
   // Fetch all meetings for mentor (for dropdown selection) - SIMPLIFIED VERSION
   const fetchAllMeetingsForMentor = async (mentorEmail) => {
@@ -116,6 +157,7 @@ export default function ScheduledDashboard() {
 
       if (!data?.meetings?.length) {
         setMeetings([]);
+        setUniqueUserDates([]);
         return;
       }
 
@@ -128,6 +170,17 @@ export default function ScheduledDashboard() {
           email: mt.email || mt.basic?.email_id || "-"
         }));
 
+        // Check if this meeting involves the current user
+        const isMentorUser = userEmail?.toLowerCase() === mentorObj.email?.toLowerCase();
+        const isMenteeInMeeting = menteeList.some(mentee => 
+          mentee.email?.toLowerCase() === userEmail?.toLowerCase()
+        );
+
+        // Only include meetings where the current user is either mentor or mentee
+        if (!isMentorUser && !isMenteeInMeeting) {
+          return [];
+        }
+
         return (meeting.dates || []).map((d) => ({
           mentor: { _id: mentorObj._id, name: mentorObj.name, email: mentorObj.email },
           mentees: Array.from(new Map(menteeList.map((mt) => [mt._id || mt.email, mt])).values()),
@@ -139,12 +192,13 @@ export default function ScheduledDashboard() {
           meeting_link: meeting.meeting_link || "",
           agenda: meeting.agenda || "-"
         }));
-      });
+      }).filter(meeting => meeting !== null && meeting !== undefined); // Filter out empty arrays
 
       setMeetings(normalized);
     } catch (err) {
       console.error("Failed to fetch scheduled data", err);
       setMeetings([]);
+      setUniqueUserDates([]);
     }
   };
 
@@ -207,6 +261,17 @@ export default function ScheduledDashboard() {
     };
   };
 
+  // Format date for display in filter
+  const formatDateForFilter = (dateStr) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  };
+
   // Check if user is mentor
   const isMentor = () => {
     return userRole.toLowerCase() === 'mentor';
@@ -267,8 +332,15 @@ export default function ScheduledDashboard() {
       return;
     }
 
+    // ✅ CHECK: Don't allow editing if meeting is completed AND approved
+    const meetingId = selectedMeeting.meeting_id;
+    if (isMeetingCompletedAndApproved(meetingId)) {
+      alert('Cannot edit date/time for completed and approved meetings');
+      setEditModalOpen(false);
+      return;
+    }
+
     try {
-      const meetingId = selectedMeeting.meeting_id;
       console.log('Updating meeting date/time:', meetingId, editFormData);
       
       // Send only date and time
@@ -336,6 +408,17 @@ export default function ScheduledDashboard() {
   };
 
   const filteredMeetings = meetings.filter((m) => {
+    // Check if this meeting is relevant to the logged-in user
+    const isMentorUser = email?.toLowerCase() === m.mentor?.email?.toLowerCase();
+    const isMenteeInMeeting = m.mentees?.some(mentee => 
+      mentee.email?.toLowerCase() === email?.toLowerCase()
+    );
+    
+    // Skip meetings that don't involve the current user
+    if (!isMentorUser && !isMenteeInMeeting) {
+      return false;
+    }
+
     const meetingStatuses = statusesMap[m.meetingId] || [];
     let overallStatus = "Pending";
 
@@ -348,10 +431,6 @@ export default function ScheduledDashboard() {
 
     return statusMatch && dateMatch;
   });
-
-  const uniqueDates = Array.from(
-    new Set(meetings.map((m) => m.date?.slice(0, 10)).filter(Boolean))
-  );
 
   return (
     <div className="dashboard-wrapper">
@@ -406,9 +485,17 @@ export default function ScheduledDashboard() {
                       const formattedDate = meetingDate.toLocaleDateString();
                       const menteeCount = meeting.mentees?.length || 0;
                       
+                      // ✅ Check if this meeting is completed and approved
+                      const isLocked = isMeetingCompletedAndApproved(meeting.meeting_id);
+                      
                       return (
-                        <option key={meeting.meeting_id || `meeting-${index}`} value={meeting.meeting_id}>
+                        <option 
+                          key={meeting.meeting_id || `meeting-${index}`} 
+                          value={meeting.meeting_id}
+                          disabled={isLocked}
+                        >
                           {formattedDate} at {meeting.time || "TBD"} 
+                          {isLocked && " (Completed & Approved)"}
                         </option>
                       );
                     })
@@ -421,13 +508,6 @@ export default function ScheduledDashboard() {
 
               {selectedMeeting && (
                 <>
-                  <div className="meeting-preview">
-                    <h4>Current Meeting Details:</h4>
-                    <p><strong>Current Date:</strong> {selectedMeeting.date ? new Date(selectedMeeting.date).toLocaleDateString() : "Not set"}</p>
-                    <p><strong>Current Time:</strong> {selectedMeeting.time || "Not set"}</p>
-               
-                  </div>
-
                   <div className="form-group">
                     <label>New Date:</label>
                     <input
@@ -455,8 +535,12 @@ export default function ScheduledDashboard() {
                     <button className="cancel-btn" onClick={() => setEditModalOpen(false)}>
                       Cancel
                     </button>
-                    <button className="save-btn" onClick={handleEditSubmit}>
-                      Update Date & Time
+                    <button 
+                      className="save-btn" 
+                      onClick={handleEditSubmit}
+                      disabled={isMeetingCompletedAndApproved(selectedMeeting.meeting_id)}
+                    >
+                      {isMeetingCompletedAndApproved(selectedMeeting.meeting_id) ? "Cannot Edit - Meeting Completed & Approved" : "Update Date & Time"}
                     </button>
                   </div>
                 </>
@@ -465,6 +549,9 @@ export default function ScheduledDashboard() {
               {!selectedMeeting && mentorMeetings.length > 0 && (
                 <div className="select-meeting-prompt">
                   <p>Please select a meeting from the dropdown above to edit its date and time.</p>
+                  <p className="edit-note">
+                    <strong>Note:</strong> Completed & Approved meetings cannot be edited. They are disabled in the dropdown.
+                  </p>
                 </div>
               )}
             </div>
@@ -475,30 +562,42 @@ export default function ScheduledDashboard() {
       {/* Main Content */}
       <div className="dashboard-container">
         <h1>Scheduled Mentorship Dashboard</h1>
+        <p className="user-info-text">Viewing meetings for: {email}</p>
 
         {/* Filters */}
         <div className="filters">
-          <label>Status:</label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="All">All</option>
-            <option value="Completed">Completed</option>
-            <option value="Postponed">Postponed</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Pending">Pending</option>
-          </select>
+          <div className="filter-group">
+            <label>Status:</label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="All">All Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="Postponed">Postponed</option>
+              <option value="Cancelled">Cancelled</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
 
-          <label>Date:</label>
-          <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-            <option value="All">All</option>
-            {uniqueDates.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+          <div className="filter-group">
+            <label>Date:</label>
+            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+              <option value="All">All Dates</option>
+              {uniqueUserDates.map((d) => (
+                <option key={d} value={d}>
+                  {formatDateForFilter(d)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {filteredMeetings.length === 0 ? (
           <div className="glass-card" style={{textAlign: 'center', padding: '40px'}}>
             <p>No scheduled meetings found for {email}</p>
+            {dateFilter !== 'All' && (
+              <p className="no-meetings-hint">
+                No meetings on {formatDateForFilter(dateFilter)}. Try selecting "All Dates" or check other dates.
+              </p>
+            )}
           </div>
         ) : (
           <div className="dashboard-grid">
@@ -518,14 +617,19 @@ export default function ScheduledDashboard() {
               if (approvedStatus) approvalBadge = approvedStatus.statusApproval;
               if (rejectedStatus) approvalBadge = rejectedStatus.statusApproval;
 
-              const targetMentee = isMentorUser
-                ? m.mentees[0]
-                : m.mentees.find((mt) => mt.email?.toLowerCase() === email?.toLowerCase());
+              // Find the mentee that matches the logged-in user (if not mentor)
+              const targetMentee = !isMentorUser
+                ? m.mentees.find((mt) => mt.email?.toLowerCase() === email?.toLowerCase())
+                : m.mentees[0]; // For mentors, show first mentee
 
               const isSubmitted =
                 !isMentorUser && submittedMentees[m.meetingId]?.includes(targetMentee?._id);
 
-             const isUpdateDisabled = approvalBadge === "Approved";
+              // ✅ UPDATED: Check if meeting is completed and approved (for ALL users)
+              const isMeetingLocked = isMeetingCompletedAndApproved(m.meetingId);
+              const disableReason = isMeetingLocked 
+                ? "Meeting completed and approved - cannot update" 
+                : "";
 
               const mentorMinutes = isMentorUser
                 ? meetingStatuses.filter((s) => s.statusApproval !== "Rejected")
@@ -555,11 +659,18 @@ export default function ScheduledDashboard() {
 
                   <div className="mentees-container">
                     <h4>Mentees:</h4>
-                    {m.mentees.map((mt) => (
-                      <p key={mt._id || mt.email}>
-                        {mt.name} ({mt.email})
-                      </p>
-                    ))}
+                    {m.mentees.map((mt) => {
+                      const isCurrentUser = mt.email?.toLowerCase() === email?.toLowerCase();
+                      return (
+                        <p 
+                          key={mt._id || mt.email}
+                          className={isCurrentUser ? 'current-user-mentee' : ''}
+                        >
+                          {mt.name} ({mt.email})
+                          {isCurrentUser && <span className="you-badge"> (You)</span>}
+                        </p>
+                      );
+                    })}
                   </div>
 
                   <div className="meeting-block">
@@ -568,13 +679,13 @@ export default function ScheduledDashboard() {
                     <p><strong>Duration:</strong> {m.duration} minutes</p>
                     <p><strong>Platform:</strong> {m.platform}</p>
                     <p><strong>Meeting Link:</strong> {m.meeting_link || "Not provided"}</p>
-                    <p><strong>Agenda:</strong> {m.agenda}</p>
+                    
 
                     {targetMentee && (
                       <button
                         className="update-meeting-btn"
-                        disabled={isUpdateDisabled}
-                        title={isUpdateDisabled ? "Already submitted or approved" : ""}
+                        disabled={isMeetingLocked}  // ✅ Disable based on meeting ID check
+                        title={isMeetingLocked ? disableReason : "Update meeting status"}
                         onClick={() =>
                           goToUpdate(m.mentor, m.date, m.time, [targetMentee], m.meetingId)
                         }

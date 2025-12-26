@@ -1,4 +1,4 @@
-// pages/MentorshipDashboard.js - WITH RESPONSIVE TOP NAVIGATION
+// pages/MentorshipDashboard.js - WITH RESPONSIVE TOP NAVIGATION AND ASSIGNMENT FILTERS
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +37,7 @@ export default function MentorshipDashboard() {
   const [mentors, setMentors] = useState([]);
   const [mentees, setMentees] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [filteredAssignments, setFilteredAssignments] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [meetingStats, setMeetingStats] = useState({
     total: 0,
@@ -53,7 +54,7 @@ export default function MentorshipDashboard() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // NEW: Filters for mentors and mentees
+  // Filters for mentors and mentees
   const [mentorFilters, setMentorFilters] = useState({
     search: '',
     phase: 'all',
@@ -63,6 +64,15 @@ export default function MentorshipDashboard() {
   
   const [menteeFilters, setMenteeFilters] = useState({
     search: '',
+    phase: 'all',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
+  
+  // NEW: Filters for assignments
+  const [assignmentFilters, setAssignmentFilters] = useState({
+    mentorEmail: '',
+    menteeEmail: '',
     phase: 'all',
     sortBy: 'createdAt',
     sortOrder: 'desc'
@@ -123,11 +133,14 @@ export default function MentorshipDashboard() {
     try {
       const res = await axios.get("http://localhost:5000/api/dashboard/assignments");
       if (res.data.success) {
-        setAssignments(res.data.assignments || []);
+        const assignmentsData = res.data.assignments || [];
+        setAssignments(assignmentsData);
+        applyAssignmentFilters(assignmentsData, assignmentFilters);
       }
     } catch (err) {
       console.error("Error fetching assignments:", err);
       setAssignments([]);
+      setFilteredAssignments([]);
     }
   };
 
@@ -278,6 +291,79 @@ export default function MentorshipDashboard() {
     setFilteredMentees(filtered);
   };
 
+  // NEW: Apply assignment filters
+  const applyAssignmentFilters = (assignmentsData, filters) => {
+    let filtered = [...assignmentsData];
+    
+    // Mentor email filter
+    if (filters.mentorEmail) {
+      const mentorEmailLower = filters.mentorEmail.toLowerCase();
+      filtered = filtered.filter(assignment => {
+        const mentorEmail = (assignment.mentorDetails?.email || '').toLowerCase();
+        return mentorEmail.includes(mentorEmailLower);
+      });
+    }
+    
+    // Mentee email filter
+    if (filters.menteeEmail) {
+      const menteeEmailLower = filters.menteeEmail.toLowerCase();
+      filtered = filtered.filter(assignment => {
+        if (!assignment.mentees || assignment.mentees.length === 0) return false;
+        
+        // Check if any mentee email matches
+        return assignment.mentees.some(mentee => {
+          const menteeEmail = (mentee.email || '').toLowerCase();
+          return menteeEmail.includes(menteeEmailLower);
+        });
+      });
+    }
+    
+    // Phase filter
+    if (filters.phase !== 'all') {
+      filtered = filtered.filter(assignment => {
+        const phaseId = assignment.phaseId || assignment.mentorDetails?.phaseId;
+        return phaseId === parseInt(filters.phase) || 
+               phaseId?.toString() === filters.phase;
+      });
+    }
+    
+    // Sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (filters.sortBy) {
+        case 'mentorName':
+          aValue = (a.mentorDetails?.name || getNameFromEmail(a.mentorDetails?.email) || '').toLowerCase();
+          bValue = (b.mentorDetails?.name || getNameFromEmail(b.mentorDetails?.email) || '').toLowerCase();
+          break;
+        case 'mentorEmail':
+          aValue = (a.mentorDetails?.email || '').toLowerCase();
+          bValue = (b.mentorDetails?.email || '').toLowerCase();
+          break;
+        case 'menteeCount':
+          aValue = a.mentees?.length || 0;
+          bValue = b.mentees?.length || 0;
+          break;
+        case 'phase':
+          aValue = a.phaseId || a.mentorDetails?.phaseId || 0;
+          bValue = b.phaseId || b.mentorDetails?.phaseId || 0;
+          break;
+        case 'createdAt':
+        default:
+          aValue = new Date(a.createdAt || 0);
+          bValue = new Date(b.createdAt || 0);
+      }
+      
+      if (filters.sortOrder === 'desc') {
+        return aValue < bValue ? 1 : -1;
+      } else {
+        return aValue > bValue ? 1 : -1;
+      }
+    });
+    
+    setFilteredAssignments(filtered);
+  };
+
   // Handle mentor filter changes
   const handleMentorFilterChange = (e) => {
     const { name, value } = e.target;
@@ -298,6 +384,17 @@ export default function MentorshipDashboard() {
     };
     setMenteeFilters(updatedFilters);
     applyMenteeFilters(mentees, updatedFilters);
+  };
+
+  // NEW: Handle assignment filter changes
+  const handleAssignmentFilterChange = (e) => {
+    const { name, value } = e.target;
+    const updatedFilters = {
+      ...assignmentFilters,
+      [name]: value
+    };
+    setAssignmentFilters(updatedFilters);
+    applyAssignmentFilters(assignments, updatedFilters);
   };
 
   // Reset mentor filters
@@ -322,6 +419,19 @@ export default function MentorshipDashboard() {
     };
     setMenteeFilters(resetFilters);
     applyMenteeFilters(mentees, resetFilters);
+  };
+
+  // NEW: Reset assignment filters
+  const resetAssignmentFilters = () => {
+    const resetFilters = {
+      mentorEmail: '',
+      menteeEmail: '',
+      phase: 'all',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    };
+    setAssignmentFilters(resetFilters);
+    applyAssignmentFilters(assignments, resetFilters);
   };
 
   // Load data based on active tab
@@ -516,9 +626,22 @@ export default function MentorshipDashboard() {
     data.forEach(item => {
       if (item.phaseId) {
         phases.add(item.phaseId.toString());
+      } else if (item.mentorDetails?.phaseId) {
+        phases.add(item.mentorDetails.phaseId.toString());
       }
     });
     return Array.from(phases).sort();
+  };
+
+  // Get unique mentor emails for suggestions
+  const getUniqueMentorEmails = () => {
+    const emails = new Set();
+    assignments.forEach(assignment => {
+      if (assignment.mentorDetails?.email) {
+        emails.add(assignment.mentorDetails.email);
+      }
+    });
+    return Array.from(emails).sort();
   };
 
   // Render loading state
@@ -555,9 +678,7 @@ export default function MentorshipDashboard() {
         </div>
         
         <div className="md-header-actions">
-          <button className="md-refresh-button" onClick={handleRefresh}>
-            <RefreshIcon />
-          </button>
+          
           <button className="md-mobile-menu-btn" onClick={toggleMobileMenu}>
             {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -890,17 +1011,74 @@ export default function MentorshipDashboard() {
               </div>
             )}
 
-            {/* ASSIGNMENTS TAB - SIMPLIFIED VIEW */}
+            {/* ASSIGNMENTS TAB - WITH EMAIL FILTERS */}
             {activeTab === 'assignments' && (
               <div className="md-assignments-tab">
-                <h2 className="md-section-title">Mentor-Mentee Assignments ({assignments.length})</h2>
-                {assignments.length === 0 ? (
+                <div className="md-section-header-with-filters">
+                  <h2 className="md-section-title">Mentor-Mentee Assignments ({filteredAssignments.length})</h2>
+                  
+                  {/* Assignment Filters */}
+                  <div className="md-filters-container md-glass-card">
+                    <div className="md-filter-row">
+                      <div className="md-filter-group">
+                        <label>Mentor Email</label>
+                        <input
+                          type="text"
+                          name="mentorEmail"
+                          placeholder="Filter by mentor email..."
+                          value={assignmentFilters.mentorEmail}
+                          onChange={handleAssignmentFilterChange}
+                          list="mentorEmailSuggestions"
+                        />
+                        <datalist id="mentorEmailSuggestions">
+                          {getUniqueMentorEmails().map(email => (
+                            <option key={email} value={email} />
+                          ))}
+                        </datalist>
+                      </div>
+                      
+                      <div className="md-filter-group">
+                        <label>Mentee Email</label>
+                        <input
+                          type="text"
+                          name="menteeEmail"
+                          placeholder="Filter by mentee email..."
+                          value={assignmentFilters.menteeEmail}
+                          onChange={handleAssignmentFilterChange}
+                        />
+                      </div>
+                      
+                    
+                      
+                     
+                      
+                    
+                      
+                      <div className="md-filter-actions">
+                        <button 
+                          className="md-apply-btn"
+                          onClick={() => applyAssignmentFilters(assignments, assignmentFilters)}
+                        >
+                          <FilterIcon /> Apply
+                        </button>
+                        <button 
+                          className="md-reset-btn"
+                          onClick={resetAssignmentFilters}
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {filteredAssignments.length === 0 ? (
                   <div className="md-empty-state md-glass-card">
-                    <p>No assignments found</p>
+                    <p>No assignments found with current filters</p>
                   </div>
                 ) : (
                   <div className="md-assignments-grid">
-                    {assignments.map((assignment) => (
+                    {filteredAssignments.map((assignment) => (
                       <div key={assignment._id} className="md-assignment-card md-glass-card">
                         <div className="md-assignment-header">
                           <div className="md-mentor-info">
@@ -923,7 +1101,7 @@ export default function MentorshipDashboard() {
                               {assignment.mentees.map((mentee, idx) => (
                                 <span key={idx} className="md-mentee-tag">
                                   <div className="md-avatar-small md-mentee-avatar">👨‍🎓</div>
-                                  <span>{mentee.name || 'Mentee'}</span>
+                                  <span>{mentee.name || 'Mentee'} {mentee.email ? `(${mentee.email})` : ''}</span>
                                 </span>
                               ))}
                             </div>

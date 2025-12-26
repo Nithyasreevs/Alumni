@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from './components/webinar/Home';
-import PlacementDashboard from './components/PlacementDashboard';
+import PlacementDashboard from './components/placement/PlacementDashboard';
 import WebinarDashboard from "./components/WebinarDashboard";
 
 import WebinarAlumniFeedbackForm from "./components/webinar/WebinarAlumniFeedbackForm";

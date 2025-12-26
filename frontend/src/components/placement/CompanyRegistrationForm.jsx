@@ -613,7 +613,7 @@ const CompanyRegistrationForm = () => {
         {/* Header */}
         <div style={styles.header}>
           <div style={styles.icon}>🏢</div>
-          <h2 style={styles.title}>Add New Company</h2>
+          <h2 style={styles.title}> Company Onboarding</h2>
           <p style={styles.subtitle}>
             Register a new company and job role for campus placements
           </p>

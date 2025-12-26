@@ -18,24 +18,6 @@ export default function TopicApprovalForm() {
   const [approvalPopupMessage, setApprovalPopupMessage] = useState('');
   const [phases, setPhases] = useState([]);
   const [phasesLoading, setPhasesLoading] = useState(true);
-  const [expandedRows, setExpandedRows] = useState(new Set());
-
-  // Function to group topics using fuzzy matching
-  const groupTopics = (topics) => {
-    let groups = [];
-    topics.forEach(t => {
-      let found = false;
-      for (let g of groups) {
-        if (stringSimilarity.compareTwoStrings(t, g[0]) > 0.6) {
-          g.push(t);
-          found = true;
-          break;
-        }
-      }
-      if (!found) groups.push([t]);
-    });
-    return groups;
-  };
 
   // Fetch all phases on component mount
   useEffect(() => {
@@ -91,7 +73,6 @@ export default function TopicApprovalForm() {
   const handlePhaseChange = (phase) => {
     setSelectedPhase(phase);
     setIsPhaseDropdownOpen(false);
-    // Here you would typically fetch data for the selected phase
     fetchTopicApprovals(phase);
   };
 
@@ -166,27 +147,10 @@ export default function TopicApprovalForm() {
     }
   };
 
-  const toggleRow = (index) => {
-    const newExpandedRows = new Set(expandedRows);
-    if (newExpandedRows.has(index)) {
-      newExpandedRows.delete(index);
-    } else {
-      newExpandedRows.add(index);
-    }
-    setExpandedRows(newExpandedRows);
-  };
-
   return (
     <div className="student-form-page">
-      {/* Background Orbs */}
-      <div className="background-orbs">
-        <div className="orb orb-purple"></div>
-        <div className="orb orb-blue animation-delay-2000"></div>
-        <div className="orb orb-pink animation-delay-4000"></div>
-      </div>
-
       <div className="form-wrapper">
-        <div >
+        <div>
           <button className="back-btn" onClick={() => navigate("/")}>
             <ArrowLeft className="back-btn-icon" /> Back to Dashboard
           </button>
@@ -199,7 +163,7 @@ export default function TopicApprovalForm() {
           </div>
 
           {/* Phase Dropdown */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem',marginRight:'10.5rem' }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <select
                 value={selectedPhase}
@@ -238,116 +202,72 @@ export default function TopicApprovalForm() {
             </div>
           </div>
 
-          {/* Mobile Header
-          <div className="md:hidden bg-gradient-to-r from-purple-600 to-blue-500 text-white font-semibold p-4 text-center">
-            <h3 className="text-lg">Topic Approval Requests</h3>
-          </div> */}
-
           {/* Table */}
-          <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-            <table className="min-w-full divide-y divide-gray-200 topic-approval-table">
+          <div className="overflow-x-auto rounded-lg" style={{ maxWidth: '80%', margin: '0 auto' }}>
+            <table className="w-full topic-approval-table" style={{ borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed', backgroundColor: 'transparent', fontSize: '1.1rem' }}>
               <thead className="bg-gradient-to-r from-purple-600 to-blue-500">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">DOMAIN</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">TOPIC</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">TOTAL REQUESTED</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">STATUS</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ACTION</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">DETAILS</th>
+                  <th className="px-6 py-5 text-left text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '25%' }}>DOMAIN</th>
+                  <th className="px-6 py-5 text-left text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '18%' }}>TOPIC</th>
+                  <th className="px-6 py-5 text-center text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '12%' }}>TOTAL REQUESTED</th>
+                  <th className="px-6 py-5 text-center text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '12%' }}>STATUS</th>
+                  <th className="px-6 py-5 text-center text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '16%' }}>ACTION</th>
+                  <th className="px-6 py-5 text-center text-2xl font-semibold text-white uppercase tracking-wide" style={{ width: '17%' }}>DETAILS</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <br></br>
+              <tbody style={{ backgroundColor: 'transparent' }}>
                 {topics.map((item, index) => (
-                  <React.Fragment key={index}>
-                    <tr className="hover:bg-purple-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.domain}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.topic}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-center text-gray-900">{item.totalRequested}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            item.status === "Approved"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleApprove(index)}
-                          disabled={item.status === "Approved"}
-                          className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white ${
-                            item.status === "Approved"
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600"
-                          }`}
-                        >
-                          ✓ Approve
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => toggleRow(index)}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                          {expandedRows.has(index) ? <ChevronUp className="w-4 h-4 mr-1" /> : <ChevronDown className="w-4 h-4 mr-1" />}
-                          {expandedRows.has(index) ? 'Hide' : 'Show'}
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedRows.has(index) && (
-                      <tr>
-                        <td colSpan="6" className="px-6 py-4 bg-gray-50">
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-900 mb-2">Topic Details</h4>
-                                <p className="text-sm text-gray-600"><strong>Domain:</strong> {item.domain}</p>
-                                <p className="text-sm text-gray-600"><strong>Topic:</strong> {item.topic}</p>
-                                <p className="text-sm text-gray-600"><strong>Total Requested:</strong> {item.totalRequested}</p>
-                                <p className="text-sm text-gray-600"><strong>Status:</strong> {item.status}</p>
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-900 mb-2">Actions</h4>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleApprove(index)}
-                                    disabled={item.status === "Approved"}
-                                    className={`flex items-center justify-center gap-2 shadow-md
-                                      px-4 py-2 rounded-lg transition-colors font-medium text-sm ${
-                                      item.status === "Approved"
-                                        ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                                        : "bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white"
-                                    }`}
-                                  >
-                                    ✓ Approve
-                                  </button>
-                                  <button
-                                    onClick={() => handleView(item)}
-                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-500
-                                      hover:from-purple-700 hover:to-blue-600 text-white shadow-md
-                                      px-4 py-2 rounded-lg transition-colors font-medium text-sm"
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                    View Students
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                   
+                  <tr key={index} className="hover:bg-purple-50 transition-colors " style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: 'transparent', marginBottom: '0.5rem', display: 'table-row' }}>
+                    <td className="px-6 py-6  text-2xl font-medium text-gray-900" style={{ width: '25%' ,}}>{item.domain} </td>
+                    <td className="px-6 py-6 text-2xl text-gray-700" style={{ width: '18%' }}>{item.topic}</td>
+                    <td className="px-6 py-6 text-2xl font-semibold text-center text-gray-900" style={{ width: '12%' }}>{item.totalRequested}</td>
+                    <td className="px-6 py-6 text-center" style={{ width: '12%' }}>
+                      <span
+                        className={`inline-flex px-4 py-2 text-base font-semibold rounded-full ${
+                          item.status === "Approved"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-6 text-center" style={{ width: '16%' }}>
+                      <button
+                        onClick={() => handleApprove(index)}
+                        disabled={item.status === "Approved"}
+                        className={`inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white transition-all whitespace-nowrap ${
+                          item.status === "Approved"
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600"
+                        }`}
+                      >
+                        ✓ Approve
+                      </button>
+                    </td>
+                    <td className="px-6 py-6 text-center" style={{ width: '17%' }}>
+                      <button
+                        onClick={() => handleView(item)}
+                        className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 transition-all whitespace-nowrap"
+                      >
+                        <Eye className="w-5 h-5 mr-2" />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+              
+                  
+                ))
+                
+                }
               </tbody>
             </table>
           </div>
           <div className="mt-6 text-center text-sm text-gray-500">
-          Designed with 💜 for Alumni Network
-        </div>
+            Designed with 💜 for Alumni Network
+          </div>
         </div>
       </div>
 

@@ -62,13 +62,27 @@ exports.updateMeetingStatus = async (req, res) => {
       meetingId,
       status,
       meetingMinutes,
-      postponedReason
+      postponed_reason, // From model
+      postponedReason,  // From frontend
+      phaseId
     } = req.body;
 
+    // ✅ Validate phaseId
+    if (!phaseId) {
+      return res.status(400).json({ message: "phaseId is required" });
+    }
+
+    const phaseIdNum = Number(phaseId);
+    if (isNaN(phaseIdNum) || phaseIdNum <= 0) {
+      return res.status(400).json({ message: "Invalid phaseId" });
+    }
+
+    // Validate other required fields
     if (!mentorEmail || (!menteeIds?.length && !menteeId) || !meetingId || !status) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
+    // Find mentor
     const mentor = await User.findOne({
       "basic.email_id": mentorEmail.trim().toLowerCase()
     });
@@ -76,66 +90,110 @@ exports.updateMeetingStatus = async (req, res) => {
       return res.status(404).json({ message: "Mentor not found" });
     }
 
+    // Create mentee array
     const menteeArray = menteeIds?.length
       ? menteeIds
       : menteeId
       ? [menteeId]
       : [];
 
+    // Status-specific validations
+    if (status === "Completed" && !meetingMinutes) {
+      return res.status(400).json({
+        message: "Meeting minutes required for completed status"
+      });
+    }
+
+    // ✅ Check both field names for postponed reason
+    const reasonForPostponed = postponed_reason || postponedReason;
+    if (status === "Postponed" && !reasonForPostponed) {
+      return res.status(400).json({
+        message: "Postponed reason required for postponed status"
+      });
+    }
+
     const createdStatuses = [];
 
     for (const id of menteeArray) {
-      if (!mongoose.Types.ObjectId.isValid(id)) continue;
-
-      // Validation
-      if (status === "Completed" && !meetingMinutes) {
-        return res.status(400).json({
-          message: "Meeting minutes required for completed status"
-        });
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        console.warn(`Invalid mentee ID: ${id}`);
+        continue;
       }
 
-      if (status === "Postponed" && !postponedReason) {
-        return res.status(400).json({
-          message: "Postponed reason required for postponed status"
-        });
+      // Verify mentee exists
+      const mentee = await User.findById(id);
+      if (!mentee) {
+        console.warn(`Mentee not found with ID: ${id}`);
+        continue;
       }
 
-      // 👇 IMPORTANT LOGIC
-      let finalMinutes = "";
+      // ✅ Update with correct field handling
+      const updateData = {
+        mentor_user_id: mentor._id,
+        status,
+        statusApproval: "Pending",
+        phaseId: phaseIdNum
+      };
 
+      // Set appropriate fields based on status
       if (status === "Completed") {
-        finalMinutes = meetingMinutes;
-      }
-
-      if (status === "Postponed") {
-        finalMinutes = postponedReason; // 👈 store here
+        updateData.meeting_minutes = meetingMinutes || "";
+        updateData.postponed_reason = "";
+      } else if (status === "Postponed") {
+        updateData.meeting_minutes = "";
+        updateData.postponed_reason = reasonForPostponed || "";
+      } else {
+        // For other statuses (Cancelled, In Progress, etc.)
+        updateData.meeting_minutes = "";
+        updateData.postponed_reason = "";
       }
 
       const updatedStatus = await MeetingStatus.findOneAndUpdate(
-        { meeting_id: meetingId, mentee_user_id: id },
-        {
-          mentor_user_id: mentor._id,
-          status,
-          meeting_minutes: finalMinutes, // ✅ unified field
-          statusApproval: "Pending"       // reset approval
+        { 
+          meeting_id: meetingId, 
+          mentee_user_id: id,
+          phaseId: phaseIdNum
         },
-        { upsert: true, new: true }
+        updateData,
+        { 
+          upsert: true, 
+          new: true,
+          setDefaultsOnInsert: true 
+        }
       );
 
       createdStatuses.push(updatedStatus);
     }
 
+    if (createdStatuses.length === 0) {
+      return res.status(400).json({ 
+        message: "No valid mentee IDs processed" 
+      });
+    }
+
     res.status(201).json({
       message: "Meeting status updated successfully",
       count: createdStatuses.length,
+      phaseId: phaseIdNum,
       statuses: createdStatuses
     });
+
   } catch (err) {
     console.error("UPDATE STATUS ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: "Validation error", 
+        errors: err.errors 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
-
 
 exports.updateMeetingMinutes = async (req, res) => {
   try {

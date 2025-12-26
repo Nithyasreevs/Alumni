@@ -1133,8 +1133,8 @@ return (
 
             <div className="form-card max-w-4xl">
               <div className="form-fields">
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Mail className="field-icon" /> Email <span className="required">*</span>
                   </label>
                   <input

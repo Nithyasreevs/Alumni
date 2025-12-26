@@ -170,7 +170,7 @@ export default function WebinarStudentFeedbackForm() {
               
               {/* Email */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Mail className="field-icon" /> Personal Email ID{" "}
                   <span className="required">*</span>
                 </label>
@@ -187,7 +187,7 @@ export default function WebinarStudentFeedbackForm() {
 
               {/* Name */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <User className="field-icon" /> Name{" "}
                   <span className="required">*</span>
                 </label>
@@ -205,7 +205,7 @@ export default function WebinarStudentFeedbackForm() {
 
               {/* Webinar */}
               <div className="form-group">
-                <label>Webinar Attended <span className="required">*</span></label>
+                <label className="field-label">Webinar Attended <span className="required">*</span></label>
                 <input
                   type="text"
                   name="webinar"
@@ -219,7 +219,7 @@ export default function WebinarStudentFeedbackForm() {
 
               {/* Speaker */}
               <div className="form-group">
-                <label>Speaker <span className="required">*</span></label>
+                <label className="field-label">Speaker <span className="required">*</span></label>
                 <input
                   type="text"
                   name="speaker"
@@ -233,7 +233,7 @@ export default function WebinarStudentFeedbackForm() {
 
               {/* Ratings */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   1. Rate the quality of the webinar <span className="required">*</span>
                 </label>
                 <div className="radio-group">
@@ -246,7 +246,7 @@ export default function WebinarStudentFeedbackForm() {
               </div>
 
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   2. Rate the speaker <span className="required">*</span>
                 </label>
                 <div className="radio-group">
@@ -260,7 +260,7 @@ export default function WebinarStudentFeedbackForm() {
 
               {/* Feedback */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   Additional feedback <span className="required">*</span>
                 </label>
                 <textarea

@@ -3,9 +3,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./RequesterFeedbackForm.css";
 
-// API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
 const RequesterFeedbackForm = ({ userEmail }) => {
   const [feedback, setFeedback] = useState("");
   const [autoData, setAutoData] = useState({
@@ -31,7 +28,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
     try {
       const encodedEmail = encodeURIComponent(userEmail);
       const userRes = await axios.get(
-        `${API_BASE_URL}/api/members/email/${encodedEmail}`
+        `http://localhost:5000/api/members/email/${encodedEmail}`
       );
 
       if (userRes.data.success && userRes.data.member) {
@@ -39,7 +36,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
         
         // Check if this user has submitted feedback
         const feedbackRes = await axios.get(
-          `${API_BASE_URL}/api/requester-feedback/user/${userId}`
+          `http://localhost:5000/api/requester-feedback/user/${userId}`
         );
 
         if (feedbackRes.data.success && feedbackRes.data.feedbacks.length > 0) {
@@ -60,7 +57,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
       
       // Fetch user details
       const userRes = await axios.get(
-        `${API_BASE_URL}/api/members/email/${encodedEmail}`
+        `http://localhost:5000/api/members/email/${encodedEmail}`
       );
 
       if (userRes.data.success && userRes.data.member) {
@@ -80,7 +77,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
 
         // Fetch user's job requests (most recent one)
         const requestsRes = await axios.get(
-          `${API_BASE_URL}/api/job-requests/user/${userId}`
+          `http://localhost:5000/api/job-requests/user/${userId}`
         );
 
         if (requestsRes.data.success && requestsRes.data.data && requestsRes.data.data.length > 0) {
@@ -122,7 +119,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
 
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/api/requester-feedback/submit-feedback`,
+        "http://localhost:5000/api/requester-feedback/submit-feedback",
         {
           alumni_user_id: autoData.userId,
           request_id: parseInt(userRequest.request_id),
@@ -212,7 +209,7 @@ const RequesterFeedbackForm = ({ userEmail }) => {
       <div className="feedback-wrapper">
         <div className="feedback-header">
           <div className="feedback-icon">💼</div>
-          <h2 className="feedback-title">Requester Feedback</h2>
+          <h2 className="feedback-title">Akumni Feedback</h2>
           <p className="feedback-subtitle">
             Share your feedback on the job request process
           </p>

@@ -1,13 +1,11 @@
 
 .student-form-page {
-  min-height: 100vh;
   width: 100%;
   position: relative;
-  overflow: hidden;
-  background: transparent;
+  background: #ffffff;
 }
 .background-orbs {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
 }
@@ -33,16 +31,14 @@
 .animation-delay-4000 { animation-delay: 4s; }
 .form-wrapper {
   position: relative;
-  z-index: 10;
-  min-height: 100vh;
-  padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+  /* z-index: 10; */
+  padding: 0;
+  max-width: 5920px;
+  max-height: 3970px;
   background: transparent;
 }
 .form-container {
-  width: 100%;
+  width: 70%;
 }
 .form-header { text-align: center; margin-bottom: 2rem;margin-top: 30px; }
 .icon-wrapper {
@@ -65,6 +61,8 @@
   color: transparent;
 }
 .form-card {
+  width: 920px; 
+  margin: 0 auto;  
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(15px);
   border-radius: 2rem;
@@ -92,18 +90,31 @@
   position: relative;
   width: 630px;
 }
-.form-fields { display: flex; flex-direction: column; gap: 1.5rem; }
-.form-group label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #4b3f91;
-  margin-bottom: 0.5rem;
-  flex-wrap: nowrap;
+.form-group .field-label {
+  display: flex !important;        /* FORCE flex */
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  
+    margin-top: 0.5rem; 
 }
-.field-icon { color: #7c3aed; width: 1.25rem; height: 1.25rem; }
-.required { color: #f44336; }
+
+.form-group .field-label svg {
+  display: inline-flex !important;
+   /* fixes SVG baseline issues */
+}
+
+.field-icon {
+  width: 18px;
+  height: 18px;
+  color: #7c3aed;
+  stroke-width: 2.5;
+}
+
+.required {
+  color: #ef4444;
+}
+
 .input-field, .select-field, .textarea-field {
   width: 100%;
   padding: 1rem 1.25rem;
@@ -206,6 +217,8 @@
   }
 
   .form-card {
+     width: 520px; 
+     margin: 0 auto;  
     padding: 1.5rem;
     border-radius: 1.25rem;
   }
@@ -216,6 +229,7 @@
 
   .form-group label {
     font-size: 0.95rem;
+    margin-top: 1rem; 
   }
 
   .input-field,
@@ -262,9 +276,9 @@
 
   /* Back button responsive styles */
   .back-btn {
-    top: 10px;
+    /* top: 1px; */
     left: 10px;
-    padding: 10px;
+    padding: 1px;
     font-size: 8px;
     min-width: 10px;
     min-height: 10px;
@@ -330,7 +344,7 @@
 .back-btn {
   position: absolute;  /* fixes it to top-left */
   top: 8px;
-  left: 8px;
+  left: 50px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -843,4 +857,9 @@
     top: 1rem;
     /* right: 1rem; */
   }
+}
+.slot-card {
+  width: 100%;
+  max-width: 950px;   /* 🔽 smaller than main card */
+  margin: 0 auto;     /* center it */
 }

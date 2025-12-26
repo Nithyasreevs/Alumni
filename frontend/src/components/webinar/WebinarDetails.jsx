@@ -51,7 +51,7 @@ export default function WebinarDetails() {
             </h2>
 
             <div>
-                <table style={{ width: "1150px", borderCollapse: "collapse" }}>
+                <table style={{ width: "810px", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ backgroundColor: "#eee", paddingTop: "15px", paddingBottom: "15px" }}>
                     {/* <th style={{  width: "177px",padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Phase ID</th> */}
@@ -102,7 +102,7 @@ export default function WebinarDetails() {
             </h2>
 
             <div>
-                <table style={{ width: "1150px", borderCollapse: "collapse" }}>
+                <table style={{ width: "810px", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ backgroundColor: "#eee", paddingTop: "15px", paddingBottom: "15px" }}>
                     <th style={{  width: "250px",padding: "10px", border: "1px solid #ddd", textAlign: "center" }}>Student Name</th>

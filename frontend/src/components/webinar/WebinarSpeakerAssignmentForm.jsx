@@ -221,7 +221,7 @@ export default function WebinarSpeakerAssignmentForm() {
                   
                   {/* Email Field */}
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>
+                    <label className="field-label">
                       <User className="field-icon" /> Email <span className="required">*</span>
                     </label>
                     <input
@@ -240,7 +240,7 @@ export default function WebinarSpeakerAssignmentForm() {
 
                   {/* Name Field */}
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>
+                   <label className="field-label">
                       <User className="field-icon" /> Name <span className="required">*</span>
                     </label>
                     <input
@@ -255,14 +255,14 @@ export default function WebinarSpeakerAssignmentForm() {
 
                 </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Building2 className="field-icon" /> Department <span className="required">*</span>
                   </label>
                   <input type="text" name="department" value={formData.department} readOnly className="input-field bg-gray-100" />
                 </div>
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Globe className="field-icon" /> Batch <span className="required">*</span>
                   </label>
                   <input type="text" name="batch" value={formData.batch} readOnly className="input-field bg-gray-100" />
@@ -270,14 +270,14 @@ export default function WebinarSpeakerAssignmentForm() {
 
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Compass className="field-icon" /> Designation <span className="required">*</span>
                   </label>
                   <input type="text" name="designation" value={formData.designation} onChange={handleChange} placeholder="Enter designation" className="input-field" />
                 </div>
-                                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Building2 className="field-icon" /> Company Name <span className="required">*</span>
                   </label>
                   <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Enter company name" className="input-field" />
@@ -287,18 +287,18 @@ export default function WebinarSpeakerAssignmentForm() {
 
               {/* Company + Photo */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Globe className="field-icon" /> Alumni City <span className="required">*</span>
                   </label>
                   <input type="text" name="alumniCity" value={formData.alumniCity} onChange={handleChange} placeholder="Enter city" className="input-field" />
                 </div>
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Upload className="field-icon" /> Speaker Photo <span className="required">*</span>
                   </label>
                   <input type="file" name="speakerPhoto" id="speaker-photo-upload" accept="image/*" className="input-field hidden" onChange={handleChange} />
-                  <label htmlFor="speaker-photo-upload" className="input-field cursor-pointer flex items-center gap-2">
+                  <label htmlFor="speaker-photo-upload" className="field-label input-field cursor-pointer flex items-center gap-2">
                     <Upload className="field-icon" /> {formData.speakerPhoto ? formData.speakerPhoto.name : "Choose photo or drag here"}
                   </label>
                 </div>
@@ -307,7 +307,7 @@ export default function WebinarSpeakerAssignmentForm() {
               {/* Domain */}
               <h2 className="section-heading">Webinar Details</h2>
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Globe className="field-icon" /> Domain <span className="required">*</span>
                 </label>
 
@@ -326,7 +326,7 @@ export default function WebinarSpeakerAssignmentForm() {
 
               {/* Webinar Topic */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Building2 className="field-icon" /> Webinar Topic <span className="required">*</span>
                 </label>
 
@@ -345,15 +345,15 @@ export default function WebinarSpeakerAssignmentForm() {
 
               {/* Webinar Venue and Alumni City */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <MapPin className="field-icon" /> Webinar Venue <span className="required">*</span>
                   </label>
                   <input type="text" name="webinarVenue" value={formData.webinarVenue} onChange={handleChange} placeholder="Enter venue" className="input-field" />
                 </div>
                 {/* Meeting Link */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Globe className="field-icon" /> Meeting Link (if Online) or else enter In Person <span className="required">*</span>
                 </label>
                 <input type="url" name="meetingLink" value={formData.meetingLink} onChange={handleChange} placeholder="Enter meeting link" className="input-field" />
@@ -362,12 +362,12 @@ export default function WebinarSpeakerAssignmentForm() {
               {/* Assign Slot */}
               <h2 className="section-heading">Assign Slot</h2>
               {slots.map((slot, i) => (
-                <div key={i} className="form-card relative grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <button type="button" onClick={() => removeSlot(i)} className="remove-slot absolute top-2 right-2">
+                <div key={i} className="slot-card relative grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {/* <button type="button" onClick={() => removeSlot(i)} className="remove-slot absolute top-2 right-2">
                     <X className="field-icon" />
-                  </button>
+                  </button> */}
                   <div className="form-group">
-                    <label>
+                    <label className="field-label">
                       <Calendar className="field-icon" /> WebinarDate <span className="required">*</span>
                     </label>
                     <input
@@ -380,7 +380,7 @@ export default function WebinarSpeakerAssignmentForm() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>
+                    <label className="field-label">
                       <Calendar className="field-icon" /> Deadline <span className="required">*</span>
                     </label>
                     <input
@@ -394,7 +394,7 @@ export default function WebinarSpeakerAssignmentForm() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>
+                    <label className="field-label">
                       <Clock className="field-icon" /> Time <span className="required">*</span>
                     </label>
                     <select value={slot.time} onChange={e => handleSlotChange(i, "time", e.target.value)} className="input-field">

@@ -190,7 +190,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Email */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Mail className="field-icon" /> Email <span className="required">*</span>
                 </label>
                 <input
@@ -205,7 +205,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Name Auto-Filled */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <User className="field-icon" /> Name <span className="required">*</span>
                 </label>
                 <input
@@ -221,7 +221,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Webinar */}
               <div className="form-group">
-                <label>Select Webinar Attended <span className="required">*</span></label>
+                <label className="field-label">Select Webinar Attended <span className="required">*</span></label>
                 <select
                   name="webinar"
                   value={formData.webinar}
@@ -242,7 +242,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Rating 1 */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   1. How would you rate the arrangements? <span className="required">*</span>
                 </label>
                 <select
@@ -262,7 +262,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Rating 2 */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   2. Rate student participation <span className="required">*</span>
                 </label>
                 <select
@@ -282,7 +282,7 @@ const WebinarAlumniFeedbackForm = () => {
 
               {/* Feedback */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <MessageSquare className="field-icon" /> Share your experience <span className="required">*</span>
                 </label>
                 <textarea

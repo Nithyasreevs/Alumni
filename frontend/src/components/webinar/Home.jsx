@@ -1,580 +1,440 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const AlumniDashboard = ({ onOpenPlacementDashboard, onOpenWebinarDashboard, onOpenMentorshipDashboard }) => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState('webinars');
   const [selectedItem, setSelectedItem] = useState(null);
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const [webinarStats, setWebinarStats] = useState([
+    { value: '6', label: 'Total Webinars' },
+    { value: '4', label: 'Approved' },
+    { value: '2', label: 'On Hold' }
+  ]);
 
+  // Data arrays
   const webinars = [
     { id: 1, title: 'AI in Healthcare', status: 'APPROVED', conducted: 12, postponed: 2, topic: 'Healthcare Technology & AI Applications', speakers: 3, date: '2024-12-15' },
     { id: 2, title: 'Data Science Career Roadmap', status: 'APPROVED', conducted: 8, postponed: 1, topic: 'Career Paths in Data Science', speakers: 2, date: '2024-11-20' },
     { id: 3, title: 'Cybersecurity Trends 2025', status: 'HOLD', conducted: 0, postponed: 1, topic: 'Latest Cybersecurity Threats', speakers: 4, date: '2025-01-10' },
-    { id: 4, title: 'Full Stack Development', status: 'APPROVED', conducted: 15, postponed: 0, topic: 'Modern Full Stack Technologies', speakers: 2, date: '2024-10-05' },
-    { id: 5, title: 'Cloud Computing Basics', status: 'HOLD', conducted: 0, postponed: 0, topic: 'Introduction to Cloud Platforms', speakers: 1, date: '2025-02-01' },
-    { id: 6, title: 'Machine Learning Essentials', status: 'APPROVED', conducted: 10, postponed: 3, topic: 'ML Fundamentals & Applications', speakers: 5, date: '2024-09-18' }
   ];
 
   const mentorships = [
     { id: 1, mentor: 'Dr. A. Ramesh', mentee: 'Priya S.', meetings: 3, status: 'ACTIVE', topic: 'Research Methodology', postponed: 0, duration: '6 months' },
     { id: 2, mentor: 'Mr. Karthik Raj', mentee: 'Deepak M.', meetings: 1, status: 'SCHEDULED', topic: 'Software Engineering', postponed: 2, duration: '3 months' },
     { id: 3, mentor: 'Ms. Divya L.', mentee: 'Harini V.', meetings: 5, status: 'ACTIVE', topic: 'Data Analytics', postponed: 1, duration: '4 months' },
-    { id: 4, mentor: 'Prof. Suresh Kumar', mentee: 'Arun K.', meetings: 7, status: 'ACTIVE', topic: 'Machine Learning', postponed: 0, duration: '8 months' },
-    { id: 5, mentor: 'Dr. Lakshmi Priya', mentee: 'Vinay R.', meetings: 2, status: 'ON HOLD', topic: 'Research Papers', postponed: 3, duration: '2 months' }
   ];
 
   const placements = [
     { id: 1, alumni: 'Rahul Sharma', company: 'Infosys', status: 'OFFERED', package: '12 LPA', position: 'Software Engineer', date: '2024-03-15', location: 'Bangalore' },
     { id: 2, alumni: 'Ananya Iyer', company: 'TCS', status: 'IN PROGRESS', package: 'Pending', position: 'Data Analyst', date: '2024-04-20', location: 'Chennai' },
     { id: 3, alumni: 'Vignesh Kumar', company: 'Amazon', status: 'REJECTED', package: '-', position: 'SDE-1', date: '2024-02-10', location: 'Hyderabad' },
-    { id: 4, alumni: 'Preethi S.', company: 'Zoho', status: 'OFFERED', package: '10 LPA', position: 'Full Stack Developer', date: '2024-03-28', location: 'Chennai' },
-    { id: 5, alumni: 'Naveen Raj', company: 'Wipro', status: 'OFFERED', package: '8 LPA', position: 'System Engineer', date: '2024-04-05', location: 'Pune' },
-    { id: 6, alumni: 'Keerthi M.', company: 'Cognizant', status: 'IN PROGRESS', package: 'Pending', position: 'Business Analyst', date: '2024-04-12', location: 'Mumbai' }
   ];
 
-  const getStatusClass = (status) => {
-    const statusMap = {
-      'APPROVED': 'status-approved',
-      'HOLD': 'status-hold',
-      'ACTIVE': 'status-active',
-      'SCHEDULED': 'status-scheduled',
-      'ON HOLD': 'status-onhold', 
-      'OFFERED': 'status-offered',
-      'IN PROGRESS': 'status-progress',
-      'REJECTED': 'status-rejected'
-    };
-    return statusMap[status] || 'status-default';
+  const statusConfig = {
+    'APPROVED': { class: 'status-approved', icon: '✓', label: 'Approved' },
+    'HOLD': { class: 'status-hold', icon: '⏸', label: 'On Hold' },
+    'ACTIVE': { class: 'status-active', icon: '●', label: 'Active' },
+    'SCHEDULED': { class: 'status-scheduled', icon: '📅', label: 'Scheduled' },
+    'ON HOLD': { class: 'status-onhold', icon: '⏸', label: 'On Hold' },
+    'OFFERED': { class: 'status-offered', icon: '🎉', label: 'Offered' },
+    'IN PROGRESS': { class: 'status-progress', icon: '⏳', label: 'In Progress' },
+    'REJECTED': { class: 'status-rejected', icon: '✕', label: 'Rejected' }
   };
 
-  const getStatusIcon = (status) => {
-    const iconMap = {
-      'APPROVED': '✓',
-      'HOLD': '⏸',
-      'ACTIVE': '●',
-      'SCHEDULED': '📅',
-      'ON HOLD': '⏸',
-      'OFFERED': '🎉',
-      'IN PROGRESS': '⏳',
-      'REJECTED': '✕'
-    };
-    return iconMap[status] || '●';
+  const DashboardCard = ({ icon, title, description, onClick, buttonText = "Go to Dashboard", stats = [] }) => (
+    <div className="dashboard-access-card">
+      <div className="dashboard-card-header">
+        <div className="dashboard-icon">{icon}</div>
+        <h3>{title}</h3>
+      </div>
+      <p className="dashboard-description">{description}</p>
+      {stats.length > 0 && (
+        <div className="dashboard-stats">
+          {stats.map((stat, index) => (
+            <div key={index} className="stat-item">
+              <span className="stat-value">{stat.value}</span>
+              <span className="stat-label">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <button className="dashboard-button" onClick={onClick}>
+        {buttonText} →
+      </button>
+    </div>
+  );
+
+  const renderDashboardAccess = () => {
+    switch(selectedTab) {
+      case 'webinars':
+        return (
+          <DashboardCard
+            icon="🎓"
+            title="Webinar Dashboard"
+            description="Manage webinar requests, speaker assignments, and topic approvals in the comprehensive management portal."
+            onClick={() => navigate('/login')}
+            stats={webinarStats}
+          />
+        );
+      case 'mentorships':
+        return (
+          <DashboardCard
+            icon="🤝"
+            title="Mentorship Dashboard"
+            description="Manage mentorship programs, track progress, and handle mentor-mentee assignments."
+            onClick={() => navigate('/login1')}
+            stats={[
+              { value: '5', label: 'Active Programs' },
+              { value: '12', label: 'Total Meetings' },
+              { value: '4', label: 'On Track' }
+            ]}
+          />
+        );
+      case 'placements':
+        return (
+          <DashboardCard
+            icon="💼"
+            title="Placement Dashboard"
+            description="View and manage placement data, company registrations, and alumni employment records."
+            onClick={() => navigate('/placement-dashboard')}
+            stats={[
+              { value: '6', label: 'Placements' },
+              { value: '3', label: 'Offered' },
+              { value: '10.5', label: 'Avg Package (LPA)' }
+            ]}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
-  const renderDetails = () => {
+  const DataCard = ({ item, type, onClick }) => {
+    const getCardContent = () => {
+      switch(type) {
+        case 'webinars':
+          return (
+            <>
+              <div className="data-card-header">
+                <h4>{item.title}</h4>
+                <span className={`status-badge ${statusConfig[item.status]?.class}`}>
+                  {statusConfig[item.status]?.icon} {statusConfig[item.status]?.label}
+                </span>
+              </div>
+              <div className="data-card-body">
+                <div className="data-info">
+                  <span className="info-icon">🎤</span>
+                  <span>{item.speakers} Speakers</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">✅</span>
+                  <span>{item.conducted} Conducted</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">📅</span>
+                  <span>{new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+            </>
+          );
+        case 'mentorships':
+          return (
+            <>
+              <div className="data-card-header">
+                <h4>{item.topic}</h4>
+                <span className={`status-badge ${statusConfig[item.status]?.class}`}>
+                  {statusConfig[item.status]?.icon} {statusConfig[item.status]?.label}
+                </span>
+              </div>
+              <div className="data-card-body">
+                <div className="data-info">
+                  <span className="info-icon">👨‍🏫</span>
+                  <span>{item.mentor}</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">👨‍🎓</span>
+                  <span>{item.mentee}</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">✅</span>
+                  <span>{item.meetings} Meetings</span>
+                </div>
+              </div>
+            </>
+          );
+        case 'placements':
+          return (
+            <>
+              <div className="data-card-header">
+                <h4>{item.alumni}</h4>
+                <span className={`status-badge ${statusConfig[item.status]?.class}`}>
+                  {statusConfig[item.status]?.icon} {statusConfig[item.status]?.label}
+                </span>
+              </div>
+              <div className="data-card-body">
+                <div className="data-info">
+                  <span className="info-icon">🏢</span>
+                  <span>{item.company}</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">💼</span>
+                  <span>{item.position}</span>
+                </div>
+                <div className="data-info">
+                  <span className="info-icon">💰</span>
+                  <span>{item.package}</span>
+                </div>
+              </div>
+            </>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="data-card" onClick={() => onClick(item)}>
+        {getCardContent()}
+        <div className="data-card-footer">
+          <span className="view-details">View Details →</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDataGrid = () => {
+    const data = selectedTab === 'webinars' ? webinars : 
+                 selectedTab === 'mentorships' ? mentorships : 
+                 placements;
+    
+    return (
+      <div className="data-grid">
+        {data.map(item => (
+          <DataCard
+            key={item.id}
+            item={item}
+            type={selectedTab}
+            onClick={setSelectedItem}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderDetailsModal = () => {
     if (!selectedItem) return null;
 
-    if (selectedTab === 'webinars') {
-      return (
-        <div className="details-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedItem.title}</h2>
-              <button className="close-btn" onClick={() => setSelectedItem(null)}>
-                <span>×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">📊</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Status</span>
-                    <span className={`detail-badge ${getStatusClass(selectedItem.status)}`}>
-                      {getStatusIcon(selectedItem.status)} {selectedItem.status}
-                    </span>
-                  </div>
+    const getModalContent = () => {
+      switch(selectedTab) {
+        case 'webinars':
+          return (
+            <>
+              <h3>{selectedItem.title}</h3>
+              <div className="modal-grid">
+                <div className="modal-item">
+                  <span className="modal-label">Status</span>
+                  <span className={`modal-value ${statusConfig[selectedItem.status]?.class}`}>
+                    {statusConfig[selectedItem.status]?.icon} {selectedItem.status}
+                  </span>
                 </div>
-                <div className="detail-box">
-                  <div className="detail-icon">📅</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Date</span>
-                    <span className="detail-value">{new Date(selectedItem.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  </div>
+                <div className="modal-item">
+                  <span className="modal-label">Date</span>
+                  <span className="modal-value">
+                    {new Date(selectedItem.date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </span>
                 </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">✅</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Conducted</span>
-                    <span className="detail-value highlight">{selectedItem.conducted} Sessions</span>
-                  </div>
+                <div className="modal-item">
+                  <span className="modal-label">Speakers</span>
+                  <span className="modal-value">{selectedItem.speakers} Experts</span>
                 </div>
-                <div className="detail-box">
-                  <div className="detail-icon">⏱</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Postponed</span>
-                    <span className="detail-value">{selectedItem.postponed} Sessions</span>
-                  </div>
+                <div className="modal-item">
+                  <span className="modal-label">Conducted Sessions</span>
+                  <span className="modal-value highlight">{selectedItem.conducted}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Postponed Sessions</span>
+                  <span className="modal-value">{selectedItem.postponed}</span>
+                </div>
+                <div className="modal-item full-width">
+                  <span className="modal-label">Topic</span>
+                  <p className="modal-description">{selectedItem.topic}</p>
                 </div>
               </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">🎤</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Speakers</span>
-                    <span className="detail-value">{selectedItem.speakers} Experts</span>
-                  </div>
+            </>
+          );
+        case 'mentorships':
+          return (
+            <>
+              <h3>Mentorship Program</h3>
+              <div className="modal-grid">
+                <div className="modal-item">
+                  <span className="modal-label">Mentor</span>
+                  <span className="modal-value highlight">{selectedItem.mentor}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Mentee</span>
+                  <span className="modal-value highlight">{selectedItem.mentee}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Status</span>
+                  <span className={`modal-value ${statusConfig[selectedItem.status]?.class}`}>
+                    {statusConfig[selectedItem.status]?.icon} {selectedItem.status}
+                  </span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Duration</span>
+                  <span className="modal-value">{selectedItem.duration}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Meetings</span>
+                  <span className="modal-value highlight">{selectedItem.meetings}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Postponed</span>
+                  <span className="modal-value">{selectedItem.postponed}</span>
+                </div>
+                <div className="modal-item full-width">
+                  <span className="modal-label">Focus Area</span>
+                  <p className="modal-description">{selectedItem.topic}</p>
                 </div>
               </div>
-              <div className="detail-full">
-                <div className="detail-icon">📝</div>
-                <div className="detail-content">
-                  <span className="detail-label">Topic Description</span>
-                  <p className="detail-description">{selectedItem.topic}</p>
+            </>
+          );
+        case 'placements':
+          return (
+            <>
+              <h3>Placement Details</h3>
+              <div className="modal-grid">
+                <div className="modal-item">
+                  <span className="modal-label">Alumni</span>
+                  <span className="modal-value highlight">{selectedItem.alumni}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Company</span>
+                  <span className="modal-value highlight">{selectedItem.company}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Status</span>
+                  <span className={`modal-value ${statusConfig[selectedItem.status]?.class}`}>
+                    {statusConfig[selectedItem.status]?.icon} {selectedItem.status}
+                  </span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Position</span>
+                  <span className="modal-value">{selectedItem.position}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Package</span>
+                  <span className="modal-value highlight">{selectedItem.package}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Location</span>
+                  <span className="modal-value">{selectedItem.location}</span>
+                </div>
+                <div className="modal-item">
+                  <span className="modal-label">Date</span>
+                  <span className="modal-value">
+                    {new Date(selectedItem.date).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      year: 'numeric', 
+                      day: 'numeric' 
+                    })}
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+            </>
+          );
+        default:
+          return null;
+      }
+    };
 
-    if (selectedTab === 'mentorships') {
-      return (
-        <div className="details-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Mentorship Program</h2>
-              <button className="close-btn" onClick={() => setSelectedItem(null)}>
-                <span>×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">👨‍🏫</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Mentor</span>
-                    <span className="detail-value highlight">{selectedItem.mentor}</span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">👨‍🎓</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Mentee</span>
-                    <span className="detail-value highlight">{selectedItem.mentee}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">📊</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Status</span>
-                    <span className={`detail-badge ${getStatusClass(selectedItem.status)}`}>
-                      {getStatusIcon(selectedItem.status)} {selectedItem.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">⏱</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Duration</span>
-                    <span className="detail-value">{selectedItem.duration}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">✅</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Meetings Completed</span>
-                    <span className="detail-value highlight">{selectedItem.meetings}</span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">📅</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Postponed</span>
-                    <span className="detail-value">{selectedItem.postponed}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-full">
-                <div className="detail-icon">📝</div>
-                <div className="detail-content">
-                  <span className="detail-label">Focus Area</span>
-                  <p className="detail-description">{selectedItem.topic}</p>
-                </div>
-              </div>
-            </div>
+    return (
+      <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close" onClick={() => setSelectedItem(null)}>×</button>
+          {getModalContent()}
+          <div className="modal-actions">
+            <button 
+              className="modal-button secondary"
+              onClick={() => setSelectedItem(null)}
+            >
+              Close
+            </button>
           </div>
         </div>
-      );
-    }
-
-    if (selectedTab === 'placements') {
-      return (
-        <div className="details-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Placement Details</h2>
-              <button className="close-btn" onClick={() => setSelectedItem(null)}>
-                <span>×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">👤</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Alumni Name</span>
-                    <span className="detail-value highlight">{selectedItem.alumni}</span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">🏢</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Company</span>
-                    <span className="detail-value highlight">{selectedItem.company}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">📊</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Status</span>
-                    <span className={`detail-badge ${getStatusClass(selectedItem.status)}`}>
-                      {getStatusIcon(selectedItem.status)} {selectedItem.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">💼</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Position</span>
-                    <span className="detail-value">{selectedItem.position}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">💰</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Package</span>
-                    <span className="detail-value highlight">{selectedItem.package}</span>
-                  </div>
-                </div>
-                <div className="detail-box">
-                  <div className="detail-icon">📍</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Location</span>
-                    <span className="detail-value">{selectedItem.location}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="detail-row">
-                <div className="detail-box">
-                  <div className="detail-icon">📅</div>
-                  <div className="detail-content">
-                    <span className="detail-label">Placement Date</span>
-                    <span className="detail-value">{new Date(selectedItem.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
   };
 
   return (
-    <div className="dashboard-wrapper">
-      <div className="animated-bg">
-        <div className="gradient-orb orb-1"></div>
-        <div className="gradient-orb orb-2"></div>
-        <div className="gradient-orb orb-3"></div>
-      </div>
-
-      <header className="main-header">
+    <div className="alumni-dashboard">
+      {/* Header */}
+      <header className="dashboard-header">
         <div className="header-content">
           <div className="logo-section">
             <div className="logo">NEC</div>
-            <div className="header-text">
-              <h1>Alumni Association</h1>
-              <p>Empowering Connections, Inspiring Success</p>
+            <div>
+              <h1>Alumni Association Dashboard</h1>
+              <p className="subtitle">Empowering Connections, Inspiring Success</p>
             </div>
-          </div>
-          <div className="header-actions">
-            <button
-              className="logout-btn"
-              onClick={() => {
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('isAdmin');
-                navigate('/login');
-              }}
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>
 
-      <nav className="tab-container">
-        <div className="tab-wrapper">
-          <button
-            className={`tab ${selectedTab === 'webinars' ? 'active' : ''}`}
-            onClick={() => navigate('/login')}
-          >
-            <span className="tab-icon">🎓</span>
-            <span className="tab-text">Webinars</span>
-            <div className="tab-indicator"></div>
-          </button>
-          <button 
-            className={`tab ${selectedTab === 'mentorships' ? 'active' : ''}`}
-            onClick={() => navigate('/login1')}
-          >
-            <span className="tab-icon">🤝</span>
-            <span className="tab-text">Mentorship</span>
-            <div className="tab-indicator"></div>
-          </button>
-          <button
-            className={`tab ${selectedTab === 'placements' ? 'active' : ''}`}
-            onClick={() => navigate('/placement-dashboard')}
-          >
-            <span className="tab-icon">💼</span>
-            <span className="tab-text">Placement</span>
-            <div className="tab-indicator"></div>
-          </button>
+      {/* Tabs */}
+      <nav className="dashboard-tabs">
+        <div className="tabs-container">
+          {['webinars', 'mentorships', 'placements'].map(tab => (
+            <button
+              key={tab}
+              className={`tab ${selectedTab === tab ? 'active' : ''}`}
+              onClick={() => setSelectedTab(tab)}
+            >
+              <span className="tab-icon">
+                {tab === 'webinars' ? '🎓' : tab === 'mentorships' ? '🤝' : '💼'}
+              </span>
+              <span className="tab-text">
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </span>
+            </button>
+          ))}
         </div>
       </nav>
 
-      <main className="content-section">
-        {selectedTab === 'webinars' && (
-          <div className="cards-container">
-            {/* Webinar Dashboard Link Card - Now at the top */}
-            <div
-              className="glass-card dashboard-link-card featured-card"
-              onClick={() => navigate('/login')}
-              onMouseEnter={() => setHoveredCard('webinar-dashboard')}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <div className="card-header">
-                <div className="featured-badge">
-                  <span className="featured-icon">🎓</span>
-                  <span className="featured-text">Management Portal</span>
-                </div>
-                <span className="status-pill status-featured">
-                  ⚡ Quick Access
-                </span>
-              </div>
-              <h3 className="dashboard-title">Webinar Dashboard</h3>
-              <p className="dashboard-link-text">
-                View and manage webinar requests, speaker assignments, topic approvals, and feedback forms in the comprehensive management portal.
-              </p>
-              <div className="dashboard-features">
-                <span className="feature-tag">📊 Analytics</span>
-                <span className="feature-tag">🎤 Speakers</span>
-                <span className="feature-tag">📝 Forms</span>
-              </div>
-              <div className="card-footer">
-                <span className="view-more highlighted">Open Dashboard →</span>
-              </div>
+      {/* Main Content */}
+      <main className="dashboard-main">
+        <div className="dashboard-container">
+          {/* Dashboard Access Section */}
+          <section className="dashboard-access-section">
+            <div className="section-header">
+              <h2>Management Portal</h2>
+              <p>Access comprehensive management tools for each module</p>
             </div>
+            {renderDashboardAccess()}
+          </section>
 
-            {/* Webinar Cards */}
-            {webinars.map(item => (
-              <div 
-                key={item.id}
-                className={`glass-card ${hoveredCard === item.id ? 'hovered' : ''}`}
-                onClick={() => setSelectedItem(item)}
-                onMouseEnter={() => setHoveredCard(item.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div className="card-header">
-                  <h3>{item.title}</h3>
-                  <span className={`status-pill ${getStatusClass(item.status)}`}>
-                    {getStatusIcon(item.status)} {item.status}
-                  </span>
-                </div>
-                <div className="card-stats">
-                  <div className="stat-item">
-                    <span className="stat-icon">✅</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Conducted</span>
-                      <span className="stat-value">{item.conducted}</span>
-                    </div>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-icon">🎤</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Speakers</span>
-                      <span className="stat-value">{item.speakers}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <span className="view-more">View Details →</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {selectedTab === 'mentorships' && (
-          <div className="cards-container">
-            {/* Mentorship Dashboard Link Card - Now at the top */}
-            <div
-              className="glass-card dashboard-link-card featured-card"
-              onClick={onOpenMentorshipDashboard}
-              onMouseEnter={() => setHoveredCard('mentorship-dashboard')}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <div className="card-header">
-                <div className="featured-badge">
-                  <span className="featured-icon">🤝</span>
-                  <span className="featured-text">Management Portal</span>
-                </div>
-                <span className="status-pill status-featured">
-                  ⚡ Quick Access
-                </span>
-              </div>
-              <h3 className="dashboard-title">Mentorship Dashboard</h3>
-              <p className="dashboard-link-text">
-                View and manage mentorship requests, mentor assignments, progress tracking, and feedback forms in the comprehensive management portal.
-              </p>
-              <div className="dashboard-features">
-                <span className="feature-tag">📊 Analytics</span>
-                <span className="feature-tag">👨‍🏫 Mentors</span>
-                <span className="feature-tag">📝 Forms</span>
-              </div>
-              <div className="card-footer">
-                <span className="view-more highlighted">Open Dashboard →</span>
-              </div>
+          {/* Data Preview Section */}
+          <section className="data-preview-section">
+            <div className="section-header">
+              <h2>Recent {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}</h2>
+              <p>Click on any item to view detailed information</p>
             </div>
-
-            {/* Mentorship Cards */}
-            {mentorships.map(item => (
-              <div 
-                key={item.id}
-                className={`glass-card ${hoveredCard === item.id ? 'hovered' : ''}`}
-                onClick={() => setSelectedItem(item)}
-                onMouseEnter={() => setHoveredCard(item.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div className="card-header">
-                  <div className="mentor-badge">
-                    <span className="badge-icon">👨‍🏫</span>
-                    <span className="badge-text">{item.mentor}</span>
-                  </div>
-                  <span className={`status-pill ${getStatusClass(item.status)}`}>
-                    {getStatusIcon(item.status)} {item.status}
-                  </span>
-                </div>
-                <div className="mentee-section">
-                  <span className="mentee-icon">👨‍🎓</span>
-                  <span className="mentee-name">{item.mentee}</span>
-                </div>
-                <div className="card-stats">
-                  <div className="stat-item">
-                    <span className="stat-icon">✅</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Meetings</span>
-                      <span className="stat-value">{item.meetings}</span>
-                    </div>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-icon">⏱</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Duration</span>
-                      <span className="stat-value">{item.duration}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <span className="view-more">View Details →</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {selectedTab === 'placements' && (
-          <div className="cards-container">
-            {/* Dashboard Link Card - Now at the top */}
-            <div 
-              className="glass-card dashboard-link-card featured-card"
-              onClick={() => navigate('/placement-dashboard')}
-              onMouseEnter={() => setHoveredCard('dashboard')}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <div className="card-header">
-                <div className="featured-badge">
-                  <span className="featured-icon">🚀</span>
-                  <span className="featured-text">Management Portal</span>
-                </div>
-                <span className="status-pill status-featured">
-                  ⚡ Quick Access
-                </span>
-              </div>
-              <h3 className="dashboard-title">Placement Dashboard</h3>
-              <p className="dashboard-link-text">
-                View and manage placement data requests, company registrations, and feedback forms in the comprehensive management portal.
-              </p>
-              <div className="dashboard-features">
-                <span className="feature-tag">📊 Analytics</span>
-                <span className="feature-tag">🏢 Companies</span>
-                <span className="feature-tag">📝 Forms</span>
-              </div>
-              <div className="card-footer">
-                <span className="view-more highlighted">Open Dashboard →</span>
-              </div>
-            </div>
-
-            {/* Placement Cards */}
-            {placements.map(item => (
-              <div 
-                key={item.id}
-                className={`glass-card ${hoveredCard === item.id ? 'hovered' : ''}`}
-                onClick={() => setSelectedItem(item)}
-                onMouseEnter={() => setHoveredCard(item.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div className="card-header">
-                  <div className="alumni-info">
-                    <span className="alumni-icon">👤</span>
-                    <span className="alumni-name">{item.alumni}</span>
-                  </div>
-                  <span className={`status-pill ${getStatusClass(item.status)}`}>
-                    {getStatusIcon(item.status)} {item.status}
-                  </span>
-                </div>
-                <div className="company-section">
-                  <span className="company-icon">🏢</span>
-                  <span className="company-name">{item.company}</span>
-                </div>
-                <div className="position-section">{item.position}</div>
-                <div className="card-stats">
-                  <div className="stat-item">
-                    <span className="stat-icon">💰</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Package</span>
-                      <span className="stat-value">{item.package}</span>
-                    </div>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-icon">📍</span>
-                    <div className="stat-info">
-                      <span className="stat-label">Location</span>
-                      <span className="stat-value">{item.location}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="card-footer">
-                  <span className="view-more">View Details →</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+            {renderDataGrid()}
+          </section>
+        </div>
       </main>
 
-      {renderDetails()}
+      {/* Details Modal */}
+      {renderDetailsModal()}
     </div>
   );
 };

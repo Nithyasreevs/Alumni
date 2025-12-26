@@ -1,8 +1,6 @@
 // companyRoutes.js
 const express = require('express');
 const multer = require('multer');
-const placementDB = require('../config/placementDB');
-
 const mongoose = require('mongoose');
 
 // ========== MODEL ==========
@@ -20,7 +18,7 @@ const companySchema = new mongoose.Schema({
   poster: { type: String }
 });
 
-const Company = placementDB.model(
+const Company = mongoose.model(
   'Company',
   companySchema,
   'company_registration'
@@ -119,6 +117,25 @@ const upload = multer({
 
 // Routes
 router.post('/register', upload.single('poster'), registerCompany);
+// Add this route in companyRoutes.js
+router.get('/all', async (req, res) => {
+  try {
+    const companies = await Company.find().sort({ company_id: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: companies.length,
+      data: companies
+    });
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching companies',
+      error: error.message
+    });
+  }
+});
 router.get('/', getAllCompanies);
 router.get('/test', (req, res) => {
   res.json({ message: 'Company routes working!' });

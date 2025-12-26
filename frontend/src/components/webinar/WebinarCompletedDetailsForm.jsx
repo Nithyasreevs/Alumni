@@ -224,21 +224,21 @@ const WebinarCompletedDetailsForm = () => {
             <br></br>
             <form onSubmit={handleSubmit} noValidate>
               <div className="form-fields">
-                 <div className="form-group">
-                                 <label>
-                                   <Globe className="field-icon" /> Domain
-                                 </label>
-                                 <input
-                                   type="text"
-                                   value={formData.domain}
-                                   readOnly
-                                   className="input-field readonly"
-                                   placeholder="Auto-filled from webinar details"
-                                 />
-                               </div>
+              <div className="form-group">
+                <label className="field-label">
+                    <Globe className="field-icon" /> Domain
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.domain}
+                    readOnly
+                    className="input-field readonly"
+                    placeholder="Auto-filled from webinar details"
+                  />
+                </div>
                 {/* Topic */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiBookOpen className="field-icon" /> Chosen Topic
                   </label>
                   <input
@@ -249,8 +249,8 @@ const WebinarCompletedDetailsForm = () => {
                     placeholder="Auto-filled from webinar details"
                   />
                 </div>
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiAward className="field-icon" /> Attended Count <span>*</span>
                   </label>
                   <input
@@ -268,8 +268,8 @@ const WebinarCompletedDetailsForm = () => {
                 </div>
 
                 {/* Attendance File Upload */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiUpload className="field-icon" /> Attendance Excel File <span>*</span>
                   </label>
                   <input
@@ -284,8 +284,8 @@ const WebinarCompletedDetailsForm = () => {
                   </small>
                 </div>
                 {/* Prize Winner Email */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiMail className="field-icon" /> Prize Winner Email{" "}
                     <span>*</span>
                   </label>
@@ -306,8 +306,8 @@ const WebinarCompletedDetailsForm = () => {
                 </div>
 
                 {/* Name */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiUser className="field-icon" /> Name
                   </label>
                   <input
@@ -320,8 +320,8 @@ const WebinarCompletedDetailsForm = () => {
                 </div>
 
                 {/* Department */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiBookOpen className="field-icon" /> Department
                   </label>
                   <input
@@ -334,8 +334,8 @@ const WebinarCompletedDetailsForm = () => {
                 </div>
 
                 {/* Batch */}
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <FiAward className="field-icon" /> Batch
                   </label>
                   <input
@@ -347,8 +347,8 @@ const WebinarCompletedDetailsForm = () => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>
+              <div className="form-group">
+                <label className="field-label">
                     <Phone className="field-icon" /> Contact No <span className="required">*</span>
                   </label>
                   <input

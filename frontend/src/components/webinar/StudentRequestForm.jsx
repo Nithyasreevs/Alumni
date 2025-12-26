@@ -225,7 +225,7 @@ export default function StudentRequestForm() {
 
               {/* NAME */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <User className="field-icon" /> Name <span className="required">*</span>
                 </label>
                 <input
@@ -242,7 +242,7 @@ export default function StudentRequestForm() {
 
               {/* EMAIL */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Mail className="field-icon" /> Personal Email ID <span className="required">*</span>
                 </label>
                 <input
@@ -259,7 +259,7 @@ export default function StudentRequestForm() {
 
               {/* CONTACT */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Phone className="field-icon" /> Contact No <span>*</span>
                 </label>
                 <input
@@ -276,7 +276,7 @@ export default function StudentRequestForm() {
 
               {/* DEPARTMENT */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Compass className="field-icon" /> Department <span className="required">*</span>
                 </label>
                 <input
@@ -293,7 +293,7 @@ export default function StudentRequestForm() {
 
               {/* DOMAIN */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <Globe className="field-icon" /> Domain <span className="required">*</span>
                 </label>
                 <select
@@ -314,7 +314,7 @@ export default function StudentRequestForm() {
 
               {/* TOPIC */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <MessageSquare className="field-icon" /> Topic <span className="required">*</span>
                 </label>
                 <textarea
@@ -330,7 +330,7 @@ export default function StudentRequestForm() {
 
               {/* REASON */}
               <div className="form-group">
-                <label>
+                <label className="field-label">
                   <MessageSquare className="field-icon" /> Reason for Requesting the Topic <span className="required">*</span>
                 </label>
                 <textarea
