@@ -16,6 +16,7 @@ import PlacementFeedbackForm from './PlacementFeedbackForm';
 import RequesterFeedbackForm from './RequesterFeedbackForm';
 import AlumniFeedbackDisplay from './AlumniFeedbackDisplay';
 import AlumniJobRequestsDisplay from './AlumniJobRequestsDisplay';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const PlacementDashboard = ({ onBackToHome }) => {
   const [view, setView] = useState('email-entry');
@@ -59,7 +60,7 @@ const PlacementDashboard = ({ onBackToHome }) => {
 
   const checkPlacementRequestStatus = async (email) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/placement-requests/check/${email}?_t=${Date.now()}`);
+      const response = await fetch(`${API_BASE_URL}/api/placement-requests/check/${email}?_t=${Date.now()}`);
       const data = await response.json();
       if (data.success && data.hasRequested) {
         setHasRequestedPlacement(true);
@@ -75,13 +76,13 @@ const PlacementDashboard = ({ onBackToHome }) => {
       
       const timestamp = Date.now();
       
-      const mappingsRes = await fetch(`http://localhost:5000/api/company-mapping?_t=${timestamp}`);
+      const mappingsRes = await fetch(`${API_BASE_URL}/api/company-mapping?_t=${timestamp}`);
       const mappingsData = await mappingsRes.json();
       
-      const companiesRes = await fetch(`http://localhost:5000/api/company-mapping/available-companies?_t=${timestamp}`);
+      const companiesRes = await fetch(`${API_BASE_URL}/api/company-mapping/available-companies?_t=${timestamp}`);
       const companiesData = await companiesRes.json();
 
-      const placementRequestsRes = await fetch(`http://localhost:5000/api/job-requests?_t=${timestamp}`);
+      const placementRequestsRes = await fetch(`${API_BASE_URL}/api/job-requests?_t=${timestamp}`);
       const placementRequestsData = await placementRequestsRes.json();
 
       if (mappingsData.success && companiesData.success) {
