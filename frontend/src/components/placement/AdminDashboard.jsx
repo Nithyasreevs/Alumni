@@ -23,7 +23,7 @@ const AlumniJobRequestsAdmin = ({ onBackToDashboard }) => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get('${API_BASE_URL}/api/job-requests');
+const response = await axios.get(`${API_BASE_URL}/api/job-requests`);
       
       if (response.data.success) {
         setJobRequests(response.data.data);
