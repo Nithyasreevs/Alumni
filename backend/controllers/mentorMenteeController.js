@@ -43,7 +43,7 @@ exports.getMentees = async (req, res) => {
   try {
     const mentees = await MenteeRequest.find({ status: "pending" });
 
-    // Get already assigned mentees
+    // Get already assigned mentees (we'll still fetch this but not filter)
     const assigned = await MentorMenteeAssignment.find();
     const assignedIds = assigned.flatMap(a => a.mentee_user_ids.map(id => id.toString()));
 
@@ -61,8 +61,10 @@ exports.getMentees = async (req, res) => {
       })
     );
 
-    // Only send mentees that are NOT assigned already
-    res.json(formatted.filter(m => !m.assigned));
+    // REMOVE THE FILTERING - Show ALL mentees
+    // Before: res.json(formatted.filter(m => !m.assigned));
+    // After: Show all mentees with assignment status
+    res.json(formatted);
 
   } catch (err) {
     res.status(500).json({ message: "Server error fetching mentees" });
