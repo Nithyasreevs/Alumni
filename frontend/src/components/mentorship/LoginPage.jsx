@@ -1,16 +1,34 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [ssoLogin, setSsoLogin] = useState(false);
 
   const navigate = useNavigate();
+useEffect(() => {
+const params = new URLSearchParams(window.location.search);
+const emailFromUrl = params.get("email");
+if (emailFromUrl) {
+const decodedEmail = atob(emailFromUrl);
+setEmail(decodedEmail);
+setSsoLogin(true);
+window.history.replaceState({}, "", window.location.pathname);
+}
+}, []);
+useEffect(() => {
+if (ssoLogin &&email) {
+handleLogin();
+setSsoLogin(false);
+}
+}, [email,ssoLogin]);
 
   const handleLogin = async () => {
     setError("");

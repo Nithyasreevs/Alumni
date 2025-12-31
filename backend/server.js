@@ -9,6 +9,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
+//SSO ROUTES
+const webinarSSORoutes = require('./single-sign-on/routes/webinar');
+app.use('/webinar', webinarSSORoutes);
+const placementSSORoutes = require('./single-sign-on/routes/placement');
+app.use('/placement', placementSSORoutes);
+const mentorshipSSORoutes = require('./single-sign-on/routes/mentorShip');
+app.use('/mentorship', mentorshipSSORoutes);
 
 
 

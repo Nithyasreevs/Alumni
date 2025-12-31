@@ -31,6 +31,26 @@ const PlacementDashboard = ({ onBackToHome }) => {
   
   const [currentPage, setCurrentPage] = useState(1);
   const applicationsPerPage = 6;
+useEffect(() => {
+const params = new URLSearchParams(window.location.search);
+const emailFromUrl = params.get("email");
+if (emailFromUrl) {
+const email = atob(emailFromUrl);
+setUserEmail(email);
+if (email === "vsnithyasaminathan143@gmail.com") {
+setUserRole("admin");
+} else if (email === "kanthisaranya@gmail.com") {
+setUserRole("coordinator");
+} else {
+setUserRole("alumni");
+checkPlacementRequestStatus(email);
+}
+setView("dashboard");
+fetchDashboardData();
+const newUrl = window.location.origin + window.location.pathname;
+window.history.replaceState({}, "", newUrl);
+}
+}, []);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
