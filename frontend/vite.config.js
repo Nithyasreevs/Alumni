@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: '/',
+  base: '/alumnimain/',
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
@@ -15,3 +15,4 @@ export default defineConfig({
     },
   },
 })
+
